@@ -189,7 +189,9 @@
 
   /* ---------- GRID ---------- */
   #status-line{max-width:1240px; margin:0 auto; padding:0 32px 14px; color:var(--text-faint); font-family:var(--font-mono); font-size:12px; display:flex; justify-content:space-between;}
-  #shop-status-line{max-width:1240px; margin:0 auto; padding:0 32px 14px; color:var(--text-faint); font-family:var(--font-mono); font-size:12px;}
+  #shop-status-line, #bp-status-line{max-width:1240px; margin:0 auto; padding:0 32px 14px; color:var(--text-faint); font-family:var(--font-mono); font-size:12px;}
+  #news-status-line{max-width:900px; margin:0 auto; padding:0 32px 14px; color:var(--text-faint); font-family:var(--font-mono); font-size:12px;}
+  #bp-grid{max-width:1240px; margin:0 auto; padding:0 32px 60px;}
 
   .countdown-wrap{margin-top:28px; display:flex; flex-direction:column; align-items:center; gap:8px;}
   .countdown-label{font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:0.2em; color:var(--text-faint);}
@@ -216,6 +218,29 @@
   }
   .fav-btn:hover{border-color:var(--yellow); color:var(--yellow);}
   .fav-btn.active{background:rgba(255,204,51,0.16); border-color:var(--yellow); color:var(--yellow); box-shadow:0 0 10px rgba(255,204,51,0.45);}
+
+  /* ---------- NEWS ---------- */
+  .news-list{max-width:900px; margin:0 auto; padding:0 32px 60px; display:flex; flex-direction:column; gap:20px;}
+  .news-card{
+    position:relative; border:1px solid var(--border); overflow:hidden;
+    min-height:240px; display:flex; align-items:flex-end;
+  }
+  .news-card::before, .news-card::after{
+    content:''; position:absolute; width:16px; height:16px; z-index:2; pointer-events:none;
+  }
+  .news-card::before{top:8px; left:8px; border-top:2px solid var(--accent); border-left:2px solid var(--accent);}
+  .news-card::after{bottom:8px; right:8px; border-bottom:2px solid var(--accent); border-right:2px solid var(--accent);}
+  .news-card img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0;}
+  .news-card .news-scrim{
+    content:''; position:absolute; inset:0; z-index:1;
+    background:linear-gradient(0deg, rgba(4,6,8,0.95) 15%, rgba(4,6,8,0.6) 55%, rgba(4,6,8,0.2) 100%);
+  }
+  .news-card .news-body{position:relative; z-index:3; padding:26px;}
+  .news-card h3{
+    font-family:var(--font-display); font-weight:800; font-size:19px; text-transform:uppercase; letter-spacing:0.01em;
+    margin-bottom:10px; color:var(--text); text-shadow:0 0 18px rgba(0,240,255,0.35);
+  }
+  .news-card p{color:var(--text-dim); font-size:14.5px; line-height:1.6; max-width:640px;}
   .card .price{display:flex; align-items:center; gap:6px; margin-top:8px; font-family:var(--font-mono); font-size:12.5px; font-weight:700; color:var(--yellow);}
   .card .price .vbuck-icon{width:15px; height:15px; object-fit:contain; filter:none;}
   .grid{
@@ -374,6 +399,58 @@
 
   .empty-state{max-width:1240px; margin:40px auto; padding:60px 32px; text-align:center; color:var(--text-faint);}
   .empty-state .big{font-family:var(--font-display); font-weight:700; font-size:20px; color:var(--text-dim); margin-bottom:8px; text-transform:uppercase;}
+
+  /* ---------- MOBILE ---------- */
+  @media (max-width:760px){
+    :root{ --topbar-h:56px; }
+
+    header{
+      position:fixed; top:0; left:0; right:0; bottom:auto; width:100%; height:var(--topbar-h);
+      flex-direction:row; align-items:center; justify-content:flex-start; gap:10px;
+      padding:0 10px; border-right:none; border-bottom:1px solid var(--border);
+      overflow-x:auto; -webkit-overflow-scrolling:touch;
+    }
+    .brand{ flex-direction:row; gap:6px; margin-bottom:0; font-size:10px; white-space:nowrap; flex-shrink:0; }
+    .brand br{ display:none; }
+    nav.tabs{ flex-direction:row; gap:6px; width:auto; flex-shrink:0; }
+    nav.tabs button{ width:auto; padding:10px 12px; white-space:nowrap; }
+    nav.tabs button.active::before{
+      left:50%; top:auto; bottom:-1px; transform:translateX(-50%);
+      width:60%; height:2px;
+    }
+
+    main{ margin-left:0; margin-top:var(--topbar-h); }
+    footer{ margin-left:0; }
+    section{ min-height:calc(100vh - var(--topbar-h)); }
+
+    .hero{ padding:36px 16px 32px; }
+    .hero h1{ font-size:clamp(28px,9vw,40px); }
+    .hero p{ font-size:15px; }
+    .eyebrow{ font-size:10px; padding:6px 14px; }
+
+    .filters{ padding:0 16px 14px; }
+    #status-line, #shop-status-line, #bp-status-line, #news-status-line{ padding:0 16px 14px; }
+    #bp-grid{ padding:0 16px 60px; }
+    .grid{ padding:0 16px 60px; grid-template-columns:repeat(auto-fill,minmax(135px,1fr)); gap:12px; }
+    .news-list{ padding:0 16px 60px; }
+    .load-more-wrap{ padding-bottom:50px; }
+
+    .card .name{ font-size:13px; }
+    .fav-btn{ width:24px; height:24px; font-size:12px; }
+
+    .modal-body{ padding:26px 20px 26px 20px; }
+    .modal-facts{ grid-template-columns:1fr; }
+
+    .map-shell{ flex-direction:column; height:calc(100vh - var(--topbar-h)); }
+    .map-sidebar{ width:100%; max-height:32vh; border-right:none; border-bottom:1px solid var(--border); padding:16px; }
+    .map-canvas-wrap{ flex:1; min-height:0; }
+
+    .compare-pickers select{ min-width:0; width:100%; max-width:280px; }
+
+    .news-card{ min-height:200px; }
+    .news-card h3{ font-size:16px; }
+    .news-card .news-body{ padding:18px; }
+  }
 </style>
 </head>
 <body>
@@ -387,6 +464,7 @@
     <button class="active" data-tab="cosmetics">Cosmetics</button>
     <button data-tab="shop">Item Shop</button>
     <button data-tab="battlepass">Battle Pass</button>
+    <button data-tab="news">News</button>
     <button data-tab="wishlist">Wishlist</button>
     <button data-tab="map">Island Map</button>
   </nav>
@@ -465,11 +543,29 @@
       </div>
     </div>
 
-    <div id="bp-status-line" style="max-width:1240px; margin:0 auto; padding:0 32px 14px; color:var(--text-faint); font-family:var(--font-mono); font-size:12px;">
+    <div id="bp-status-line">
       <span id="bp-status">Waiting on the cosmetics feed…</span>
     </div>
 
-    <div id="bp-grid" style="max-width:1240px; margin:0 auto; padding:0 32px 60px;"></div>
+    <div id="bp-grid"></div>
+  </section>
+
+  <!-- ===================== NEWS TAB ===================== -->
+  <section id="tab-news">
+    <div class="hero">
+      <div class="eyebrow pink">Transmissions</div>
+      <h1>Latest<br>News.</h1>
+      <p>Official in-game announcements — pulled live from Epic's Battle Royale news feed.</p>
+      <div class="stats-row" id="news-stats-row">
+        <span><b id="news-count">—</b> announcements</span>
+      </div>
+    </div>
+
+    <div id="news-status-line">
+      <span id="news-status">Connecting to Epic's news feed…</span>
+    </div>
+
+    <div class="news-list" id="news-list"></div>
   </section>
 
   <!-- ===================== WISHLIST TAB ===================== -->
@@ -1120,6 +1216,49 @@ function tickShopCountdown(){
 }
 
 loadShop();
+
+/* ============================================================
+   NEWS: Epic's official Battle Royale announcements
+   ============================================================ */
+function newsCardHTML(m){
+  const img = m.image || m.tileImage || '';
+  return `
+  <div class="news-card">
+    ${img ? `<img loading="lazy" src="${img}" alt="${escapeHtml(m.title || '')}">` : ''}
+    <div class="news-scrim"></div>
+    <div class="news-body">
+      <h3>${escapeHtml(m.title || m.tabTitle || 'Untitled')}</h3>
+      ${m.body ? `<p>${escapeHtml(m.body)}</p>` : ''}
+    </div>
+  </div>`;
+}
+
+async function loadNews(){
+  const statusEl = document.getElementById('news-status');
+  const container = document.getElementById('news-list');
+  try{
+    const res = await fetch('https://fortnite-api.com/v2/news');
+    if(!res.ok) throw new Error('bad response');
+    const json = await res.json();
+    const motds = (json.data?.br?.motds || []).filter(m => !m.hidden);
+    motds.sort((a,b) => (b.sortingPriority ?? 0) - (a.sortingPriority ?? 0));
+
+    document.getElementById('news-count').textContent = motds.length.toLocaleString();
+
+    if(!motds.length){
+      statusEl.textContent = 'Live from fortnite-api.com · nothing posted right now';
+      container.innerHTML = `<div class="empty-state"><div class="big">Nothing posted right now</div>Check back once Epic posts a new announcement.</div>`;
+      return;
+    }
+
+    statusEl.textContent = `Live from fortnite-api.com · last refreshed ${new Date().toLocaleTimeString()}`;
+    container.innerHTML = motds.map(newsCardHTML).join('');
+  } catch(err){
+    statusEl.textContent = 'Could not reach fortnite-api.com — check your connection.';
+    container.innerHTML = `<div class="empty-state"><div class="big">Live data unavailable right now</div>This loads client-side from a public API — if this environment blocks outbound requests, open the file directly in a browser instead.</div>`;
+  }
+}
+loadNews();
 
 /* ============================================================
    MAP: real island image from fortnite-api.com/v1/map
