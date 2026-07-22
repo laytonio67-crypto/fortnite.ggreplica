@@ -203,6 +203,19 @@
     font-size:9.5px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; padding:5px 10px 5px 8px;
     clip-path:polygon(0 0, 100% 0, 78% 100%, 0% 100%);
   }
+  .tier-badge{
+    position:absolute; top:0; left:0; z-index:2; background:var(--bg-elev-solid); color:var(--accent);
+    font-size:10px; font-weight:700; letter-spacing:0.04em; padding:4px 9px; font-family:var(--font-mono);
+    border-right:1px solid var(--border); border-bottom:1px solid var(--border);
+  }
+  .fav-btn{
+    position:absolute; top:6px; right:6px; z-index:4; width:26px; height:26px;
+    background:rgba(4,6,8,0.8); border:1px solid var(--border); color:var(--text-faint);
+    font-size:13px; line-height:1; display:flex; align-items:center; justify-content:center;
+    transition:all .15s;
+  }
+  .fav-btn:hover{border-color:var(--yellow); color:var(--yellow);}
+  .fav-btn.active{background:rgba(255,204,51,0.16); border-color:var(--yellow); color:var(--yellow); box-shadow:0 0 10px rgba(255,204,51,0.45);}
   .card .price{display:flex; align-items:center; gap:6px; margin-top:8px; font-family:var(--font-mono); font-size:12.5px; font-weight:700; color:var(--yellow);}
   .card .price .vbuck-icon{width:15px; height:15px; object-fit:contain; filter:none;}
   .grid{
@@ -373,6 +386,8 @@
   <nav class="tabs">
     <button class="active" data-tab="cosmetics">Cosmetics</button>
     <button data-tab="shop">Item Shop</button>
+    <button data-tab="battlepass">Battle Pass</button>
+    <button data-tab="wishlist">Wishlist</button>
     <button data-tab="map">Island Map</button>
   </nav>
 </header>
@@ -382,7 +397,7 @@
   <!-- ===================== COSMETICS TAB ===================== -->
   <section id="tab-cosmetics" class="active">
     <div class="hero">
-      <div class="eyebrow pink">Cosmetic Locker</div>
+      <div class="eyebrow pink">Cosmetics</div>
       <h1>Every skin.<br>Every drop.</h1>
       <p>Live cosmetic catalog pulled straight from Epic's public item data — real art, real release dates, real flavor text.</p>
       <div class="spectrum" id="spectrum"></div>
@@ -437,6 +452,38 @@
     </div>
 
     <div class="grid" id="shop-grid"></div>
+  </section>
+
+  <!-- ===================== BATTLE PASS TAB ===================== -->
+  <section id="tab-battlepass">
+    <div class="hero">
+      <div class="eyebrow pink">Current Season</div>
+      <h1 id="bp-season-label">Battle Pass.</h1>
+      <p>Outfits, back blings, emotes and more released this season — pulled live from Epic's cosmetics data.</p>
+      <div class="stats-row" id="bp-stats-row">
+        <span><b id="bp-count">—</b> items this season</span>
+      </div>
+    </div>
+
+    <div id="bp-status-line" style="max-width:1240px; margin:0 auto; padding:0 32px 14px; color:var(--text-faint); font-family:var(--font-mono); font-size:12px;">
+      <span id="bp-status">Waiting on the cosmetics feed…</span>
+    </div>
+
+    <div id="bp-grid" style="max-width:1240px; margin:0 auto; padding:0 32px 60px;"></div>
+  </section>
+
+  <!-- ===================== WISHLIST TAB ===================== -->
+  <section id="tab-wishlist">
+    <div class="hero">
+      <div class="eyebrow">Saved</div>
+      <h1>Your<br>Wishlist.</h1>
+      <p>Cosmetics you've starred across the site — saved right in this browser.</p>
+      <div class="stats-row" id="wishlist-stats-row">
+        <span><b id="wishlist-count">—</b> saved</span>
+      </div>
+    </div>
+
+    <div class="grid" id="wishlist-grid"></div>
   </section>
 
   <!-- ===================== MAP TAB ===================== -->
@@ -568,6 +615,8 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
     if(btn.dataset.tab === 'map'){
       // container was display:none (zero size) until just now, so re-fit once it's visible
       requestAnimationFrame(()=>{ window.__fitMap && window.__fitMap(); });
+    } else if(btn.dataset.tab === 'wishlist'){
+      renderWishlist();
     }
   });
 });
@@ -652,6 +701,7 @@ function cardHTML(item){
   const rColor = rarityColor(item.rarity?.value);
   return `
   <div class="card" style="--rarity-color:${rColor}" data-id="${item.id}">
+    ${favButtonHTML(item.id)}
     <div class="imgwrap">${img ? `<img loading="lazy" src="${img}" alt="${escapeHtml(item.name)}">` : `<div style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint);">no image</div>`}</div>
     <div class="meta">
       <div class="name">${escapeHtml(item.name)}</div>
@@ -660,6 +710,60 @@ function cardHTML(item){
   </div>`;
 }
 function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ============================================================
+   WISHLIST: favorite any cosmetic, saved to this browser only
+   ============================================================ */
+const FAVORITES_KEY = 'lootlog_favorites';
+let FAVORITES = new Set();
+try{ FAVORITES = new Set(JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]')); } catch(err){ FAVORITES = new Set(); }
+
+function saveFavorites(){
+  try{ localStorage.setItem(FAVORITES_KEY, JSON.stringify([...FAVORITES])); } catch(err){ /* storage unavailable, e.g. private browsing */ }
+}
+function isFavorite(id){ return FAVORITES.has(id); }
+function toggleFavorite(id){
+  if(FAVORITES.has(id)) FAVORITES.delete(id); else FAVORITES.add(id);
+  saveFavorites();
+  document.querySelectorAll(`.fav-btn[data-fav-id="${CSS.escape(id)}"]`).forEach(btn=>{
+    btn.classList.toggle('active', FAVORITES.has(id));
+  });
+  const countEl = document.getElementById('wishlist-count');
+  if(countEl) countEl.textContent = FAVORITES.size.toLocaleString();
+  if(document.getElementById('tab-wishlist')?.classList.contains('active')) renderWishlist();
+}
+function favButtonHTML(id){
+  return `<button class="fav-btn${isFavorite(id) ? ' active' : ''}" data-fav-id="${escapeHtml(id)}" title="Toggle wishlist">★</button>`;
+}
+function attachCardHandlers(container){
+  container.querySelectorAll('.card[data-id]').forEach(card=>{
+    card.addEventListener('click', ()=> openModal(card.dataset.id));
+  });
+  container.querySelectorAll('.fav-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      toggleFavorite(btn.dataset.favId);
+    });
+  });
+}
+function renderWishlist(){
+  const grid = document.getElementById('wishlist-grid');
+  const countEl = document.getElementById('wishlist-count');
+  const ids = [...FAVORITES];
+  countEl.textContent = ids.length.toLocaleString();
+
+  if(!ids.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="big">No favorites yet</div>Tap the ★ on any cosmetic — in Cosmetics, Item Shop, or Battle Pass — to save it here.</div>`;
+    return;
+  }
+  const items = ids.map(id => ALL_ITEMS.find(i => i.id === id)).filter(Boolean);
+  if(!items.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="big">Still loading…</div>Your saved items will show up once the cosmetics feed finishes loading.</div>`;
+    return;
+  }
+  grid.innerHTML = items.map(cardHTML).join('');
+  attachCardHandlers(grid);
+}
 
 function render(){
   let filtered = ALL_ITEMS.filter(matchesFilters);
@@ -695,9 +799,7 @@ function render(){
   }
 
   grid.innerHTML = slice.map(cardHTML).join('');
-  grid.querySelectorAll('.card').forEach(card=>{
-    card.addEventListener('click', ()=> openModal(card.dataset.id));
-  });
+  attachCardHandlers(grid);
 
   const lm = document.getElementById('load-more-wrap');
   lm.style.display = filtered.length > VISIBLE_COUNT ? 'flex' : 'none';
@@ -782,12 +884,116 @@ async function loadCosmetics(){
 
     document.getElementById('loading-msg').textContent = `Live from fortnite-api.com`;
     render();
+    renderBattlePass();
   } catch(err){
     document.getElementById('loading-msg').textContent = 'Could not reach fortnite-api.com — check your connection or see notes below.';
     document.getElementById('grid').innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="big">Live data unavailable right now</div>The catalog loads client-side from a public API — if this environment blocks outbound requests, open the file directly in a browser instead.</div>`;
+    document.getElementById('bp-status').textContent = 'Could not reach fortnite-api.com — check your connection.';
+    document.getElementById('bp-grid').innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="big">Battle pass data unavailable right now</div>This loads client-side from a public API — if this environment blocks outbound requests, open the file directly in a browser instead.</div>`;
   }
 }
 loadCosmetics();
+
+/* ============================================================
+   BATTLE PASS: curated per-season reward set, matched against the
+   live cosmetics feed for art/rarity/ids.
+   fortnite-api.com has no endpoint for actual battle pass tier/reward
+   data, so there's no way to fetch "the current pass" automatically —
+   instead each season's real character sets (from Epic's own patch
+   notes / pass reward pages) are listed here by name, and only items
+   belonging to those sets are pulled from the live feed. This is why
+   it's a hand-maintained list keyed by "chapter-season" rather than
+   fully automatic like the other tabs, and needs a new entry added
+   each season.
+   ============================================================ */
+const BATTLE_PASS_SEASONS = {
+  '7-3': {
+    passName: 'Runners Battle Pass',
+    pages: [
+      { title:'The Guardian',   sets:['The New Seven'] },
+      { title:'The Voidblade',  sets:['The Void Unknown'] },
+      { title:'Cluster',        sets:['Lucky Duck'] },
+      { title:'Heatwave PJ',    sets:['Radio Runner'] },
+      { title:'Wolfe',          sets:['Wolfe Hunt'] },
+      { title:'Dylan',          sets:['Mercenary Heartbreaker'] },
+      { title:'Vanguard Slone', sets:["Island's Innovator"] },
+      { title:'John Wick',      sets:['John Wick'], names:['John Wick (Pen & Ink)'] },
+    ]
+  }
+};
+
+function renderBattlePass(){
+  const statusEl = document.getElementById('bp-status');
+  const container = document.getElementById('bp-grid');
+
+  if(!ALL_ITEMS.length){
+    statusEl.textContent = 'Battle pass data unavailable right now.';
+    return;
+  }
+
+  const dated = ALL_ITEMS
+    .filter(i => i.added && i.introduction?.chapter && i.introduction?.season)
+    .sort((a,b) => new Date(b.added) - new Date(a.added));
+  const latest = dated[0];
+  if(!latest){
+    statusEl.textContent = 'Could not determine the current season from this feed.';
+    container.innerHTML = '';
+    return;
+  }
+
+  const seasonKey = `${latest.introduction.chapter}-${latest.introduction.season}`;
+  const seasonLabel = (latest.introduction.text || `Chapter ${latest.introduction.chapter}, Season ${latest.introduction.season}`)
+    .replace(/^introduced in\s*/i, '').replace(/\.$/, '');
+  document.getElementById('bp-season-label').textContent = seasonLabel + '.';
+
+  const passData = BATTLE_PASS_SEASONS[seasonKey];
+  if(!passData){
+    statusEl.textContent = `No curated battle pass list for ${seasonLabel} yet.`;
+    document.getElementById('bp-count').textContent = '0';
+    container.innerHTML = `<div class="empty-state"><div class="big">Not added yet</div>This season's battle pass line-up hasn't been curated into the site yet — check the Cosmetics tab and sort by newest release date in the meantime.</div>`;
+    return;
+  }
+
+  let totalCount = 0;
+  let html = '';
+  let tierCounter = 0;
+  for(const page of passData.pages){
+    const setNames = new Set(page.sets || []);
+    const nameSet = new Set(page.names || []);
+    let items = ALL_ITEMS.filter(i =>
+      i.introduction && `${i.introduction.chapter}-${i.introduction.season}` === seasonKey &&
+      (setNames.has(i.set?.value) || nameSet.has(i.name))
+    );
+    if(!items.length) continue;
+    items.sort((a,b) => (a.type?.value === 'outfit' ? -1 : 1) - (b.type?.value === 'outfit' ? -1 : 1) || a.name.localeCompare(b.name));
+    totalCount += items.length;
+    html += `<h3 style="font-family:var(--font-display); font-weight:700; font-size:13px; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent2); margin:32px 0 14px;">${escapeHtml(page.title)}</h3>`;
+    html += `<div class="grid">${items.map(item => bpCardHTML(item, ++tierCounter)).join('')}</div>`;
+  }
+
+  document.getElementById('bp-count').textContent = totalCount.toLocaleString();
+  statusEl.textContent = totalCount
+    ? `Live from fortnite-api.com · ${passData.passName} — curated set list, art/rarity pulled live`
+    : `Live from fortnite-api.com · none of ${passData.passName}'s items were found in the current feed yet`;
+
+  container.innerHTML = html || `<div class="empty-state"><div class="big">Nothing to show yet</div>The live feed doesn't have this season's items indexed yet — try again shortly.</div>`;
+  attachCardHandlers(container);
+}
+
+function bpCardHTML(item, index){
+  const img = item.images?.icon || item.images?.smallIcon || item.images?.featured || '';
+  const rColor = rarityColor(item.rarity?.value);
+  return `
+  <div class="card" style="--rarity-color:${rColor}" data-id="${item.id}">
+    ${favButtonHTML(item.id)}
+    <span class="tier-badge">${String(index).padStart(2,'0')}</span>
+    <div class="imgwrap">${img ? `<img loading="lazy" src="${img}" alt="${escapeHtml(item.name)}">` : `<div style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint);">no image</div>`}</div>
+    <div class="meta">
+      <div class="name">${escapeHtml(item.name)}</div>
+      <div class="sub"><span class="rarity-tag">${item.rarity?.displayValue || '—'}</span><span>${item.type?.displayValue || ''}</span></div>
+    </div>
+  </div>`;
+}
 
 /* ============================================================
    ITEM SHOP: fetch, render, and self-refreshing countdown
@@ -829,6 +1035,7 @@ function shopCardHTML(entry){
   return `
   <div class="card" style="--rarity-color:${rColor}" data-shop-id="${item.id}">
     ${entry.bundle ? `<span class="bundle-badge">Bundle</span>` : ''}
+    ${favButtonHTML(item.id)}
     <div class="imgwrap">${img ? `<img loading="lazy" src="${img}" alt="${escapeHtml(item.name)}">` : `<div style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint);">no image</div>`}</div>
     <div class="meta">
       <div class="name">${escapeHtml(item.name)}</div>
@@ -853,6 +1060,12 @@ function renderShop(){
       const entry = SHOP_ENTRIES.find(e => shopEntryItem(e)?.id === card.dataset.shopId);
       const item = entry && shopEntryItem(entry);
       if(item) showItemModal(item);
+    });
+  });
+  grid.querySelectorAll('.fav-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      toggleFavorite(btn.dataset.favId);
     });
   });
 }
