@@ -241,6 +241,16 @@
     margin-bottom:10px; color:var(--text); text-shadow:0 0 18px rgba(0,240,255,0.35);
   }
   .news-card p{color:var(--text-dim); font-size:14.5px; line-height:1.6; max-width:640px;}
+
+  /* ---------- LOCKER BUTTON (add-to-locker, sits left of the ★) ---------- */
+  .locker-btn{
+    position:absolute; top:6px; right:36px; z-index:4; width:26px; height:26px;
+    background:rgba(4,6,8,0.8); border:1px solid var(--border); color:var(--text-faint);
+    font-size:13px; line-height:1; display:flex; align-items:center; justify-content:center;
+    transition:all .15s;
+  }
+  .locker-btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .locker-btn.active{ background:rgba(0,240,255,0.16); border-color:var(--accent); color:var(--accent); box-shadow:0 0 10px rgba(0,240,255,0.45); }
   .card .price{display:flex; align-items:center; gap:6px; margin-top:8px; font-family:var(--font-mono); font-size:12.5px; font-weight:700; color:var(--yellow);}
   .card .price .vbuck-icon{width:15px; height:15px; object-fit:contain; filter:none;}
   .grid{
@@ -466,6 +476,7 @@
     <button data-tab="battlepass">Battle Pass</button>
     <button data-tab="news">News</button>
     <button data-tab="wishlist">Wishlist</button>
+    <button data-tab="locker">Locker</button>
     <button data-tab="map">Island Map</button>
   </nav>
 </header>
@@ -580,6 +591,20 @@
     </div>
 
     <div class="grid" id="wishlist-grid"></div>
+  </section>
+
+  <!-- ===================== LOCKER TAB ===================== -->
+  <section id="tab-locker">
+    <div class="hero">
+      <div class="eyebrow pink">Collection</div>
+      <h1>Your<br>Locker.</h1>
+      <p>Cosmetics you've added to your locker — saved right in this browser.</p>
+      <div class="stats-row" id="locker-stats-row">
+        <span><b id="locker-count">—</b> in locker</span>
+      </div>
+    </div>
+
+    <div class="grid" id="locker-grid"></div>
   </section>
 
   <!-- ===================== MAP TAB ===================== -->
@@ -713,6 +738,8 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
       requestAnimationFrame(()=>{ window.__fitMap && window.__fitMap(); });
     } else if(btn.dataset.tab === 'wishlist'){
       renderWishlist();
+    } else if(btn.dataset.tab === 'locker'){
+      renderLocker();
     }
   });
 });
@@ -797,6 +824,7 @@ function cardHTML(item){
   const rColor = rarityColor(item.rarity?.value);
   return `
   <div class="card" style="--rarity-color:${rColor}" data-id="${item.id}">
+    ${lockerButtonHTML(item.id)}
     ${favButtonHTML(item.id)}
     <div class="imgwrap">${img ? `<img loading="lazy" src="${img}" alt="${escapeHtml(item.name)}">` : `<div style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint);">no image</div>`}</div>
     <div class="meta">
@@ -841,6 +869,12 @@ function attachCardHandlers(container){
       toggleFavorite(btn.dataset.favId);
     });
   });
+  container.querySelectorAll('.locker-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      toggleLocker(btn.dataset.lockerId);
+    });
+  });
 }
 function renderWishlist(){
   const grid = document.getElementById('wishlist-grid');
@@ -855,6 +889,55 @@ function renderWishlist(){
   const items = ids.map(id => ALL_ITEMS.find(i => i.id === id)).filter(Boolean);
   if(!items.length){
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="big">Still loading…</div>Your saved items will show up once the cosmetics feed finishes loading.</div>`;
+    return;
+  }
+  grid.innerHTML = items.map(cardHTML).join('');
+  attachCardHandlers(grid);
+}
+
+/* ============================================================
+   LOCKER: a second collection (like the wishlist), saved to
+   this browser only. Added via the ▤ button on any card.
+   ============================================================ */
+const LOCKER_KEY = 'lootlog_locker';
+let LOCKER = new Set();
+try{
+  const raw = JSON.parse(localStorage.getItem(LOCKER_KEY) || '[]');
+  if(Array.isArray(raw)) LOCKER = new Set(raw); // old slot-object format (if any) is ignored → clean start
+} catch(err){ LOCKER = new Set(); }
+
+function saveLocker(){
+  try{ localStorage.setItem(LOCKER_KEY, JSON.stringify([...LOCKER])); } catch(err){ /* storage unavailable */ }
+}
+function inLocker(id){ return LOCKER.has(id); }
+function toggleLocker(id){
+  if(LOCKER.has(id)) LOCKER.delete(id); else LOCKER.add(id);
+  saveLocker();
+  document.querySelectorAll(`.locker-btn[data-locker-id="${CSS.escape(id)}"]`).forEach(btn=>{
+    btn.classList.toggle('active', LOCKER.has(id));
+    btn.textContent = LOCKER.has(id) ? '✓' : '▤';
+  });
+  const countEl = document.getElementById('locker-count');
+  if(countEl) countEl.textContent = LOCKER.size.toLocaleString();
+  if(document.getElementById('tab-locker')?.classList.contains('active')) renderLocker();
+}
+function lockerButtonHTML(id){
+  return `<button class="locker-btn${inLocker(id) ? ' active' : ''}" data-locker-id="${escapeHtml(id)}" title="Toggle locker">${inLocker(id) ? '✓' : '▤'}</button>`;
+}
+
+function renderLocker(){
+  const grid = document.getElementById('locker-grid');
+  const countEl = document.getElementById('locker-count');
+  const ids = [...LOCKER];
+  countEl.textContent = ids.length.toLocaleString();
+
+  if(!ids.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="big">Your locker is empty</div>Tap the ▤ on any cosmetic — in Cosmetics, Item Shop, or Battle Pass — to add it here.</div>`;
+    return;
+  }
+  const items = ids.map(id => ALL_ITEMS.find(i => i.id === id)).filter(Boolean);
+  if(!items.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="big">Still loading…</div>Your locker items will show up once the cosmetics feed finishes loading.</div>`;
     return;
   }
   grid.innerHTML = items.map(cardHTML).join('');
@@ -1081,6 +1164,7 @@ function bpCardHTML(item, index){
   const rColor = rarityColor(item.rarity?.value);
   return `
   <div class="card" style="--rarity-color:${rColor}" data-id="${item.id}">
+    ${lockerButtonHTML(item.id)}
     ${favButtonHTML(item.id)}
     <span class="tier-badge">${String(index).padStart(2,'0')}</span>
     <div class="imgwrap">${img ? `<img loading="lazy" src="${img}" alt="${escapeHtml(item.name)}">` : `<div style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint);">no image</div>`}</div>
@@ -1131,6 +1215,7 @@ function shopCardHTML(entry){
   return `
   <div class="card" style="--rarity-color:${rColor}" data-shop-id="${item.id}">
     ${entry.bundle ? `<span class="bundle-badge">Bundle</span>` : ''}
+    ${lockerButtonHTML(item.id)}
     ${favButtonHTML(item.id)}
     <div class="imgwrap">${img ? `<img loading="lazy" src="${img}" alt="${escapeHtml(item.name)}">` : `<div style="font-family:var(--font-mono); font-size:11px; color:var(--text-faint);">no image</div>`}</div>
     <div class="meta">
@@ -1162,6 +1247,12 @@ function renderShop(){
     btn.addEventListener('click', (e)=>{
       e.stopPropagation();
       toggleFavorite(btn.dataset.favId);
+    });
+  });
+  grid.querySelectorAll('.locker-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      toggleLocker(btn.dataset.lockerId);
     });
   });
 }
@@ -1290,6 +1381,7 @@ const MAP_HISTORY_RAW = [
   { chapter:1, season:4, label:"v4.2", url:"https://raw.githubusercontent.com/laytonio67-crypto/fortnite-archives/main/chapter_1/season_4/4_2/4_2.jpg" },
   { chapter:1, season:4, label:"v4.4", url:"https://raw.githubusercontent.com/laytonio67-crypto/fortnite-archives/main/chapter_1/season_4/4_4/4_4.jpg" },
   { chapter:1, season:4, label:"v4.5", url:"https://raw.githubusercontent.com/laytonio67-crypto/fortnite-archives/main/chapter_1/season_4/4_5/4_5.jpg" },
+  { chapter:1, season:5, label:"v5.00", url:"https://raw.githubusercontent.com/laytonio67-crypto/fortnite-archives/main/chapter_1/season_5/5_00/5_00.jpg" },
   { chapter:1, season:5, label:"v5.10", url:"https://raw.githubusercontent.com/laytonio67-crypto/fortnite-archives/main/chapter_1/season_5/5_10/5_10.jpg" },
   { chapter:1, season:5, label:"v5.20", url:"https://raw.githubusercontent.com/laytonio67-crypto/fortnite-archives/main/chapter_1/season_5/5_20/5_20.jpg" },
   { chapter:1, season:5, label:"v5.21", url:"https://raw.githubusercontent.com/laytonio67-crypto/fortnite-archives/main/chapter_1/season_5/5_21/5_21.jpg" },
