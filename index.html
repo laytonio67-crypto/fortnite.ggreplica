@@ -194,6 +194,8 @@
   #shop-status-line, #bp-status-line{max-width:1240px; margin:0 auto; padding:0 32px 14px; color:var(--text-faint); font-family:var(--font-mono); font-size:12px;}
   #news-status-line{max-width:900px; margin:0 auto; padding:0 32px 14px; color:var(--text-faint); font-family:var(--font-mono); font-size:12px;}
   #bp-grid{max-width:1240px; margin:0 auto; padding:0 32px 60px;}
+  #patchnotes-status-line{max-width:1000px; margin:0 auto; padding:0 32px 20px; color:var(--text-faint); font-family:var(--font-mono); font-size:12px; line-height:1.6;}
+  #patchnotes-container{max-width:1000px; margin:0 auto; padding:0 32px 60px;}
 
   .countdown-wrap{margin-top:28px; display:flex; flex-direction:column; align-items:center; gap:8px;}
   .countdown-label{font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:0.2em; color:var(--text-faint);}
@@ -304,6 +306,30 @@
   .season-dates{font-family:var(--font-mono); font-size:12.5px; color:var(--text); font-weight:500;}
   .season-meta{font-family:var(--font-mono); font-size:11px; color:var(--text-faint); margin-top:5px;}
   .season-meta .now{color:var(--yellow); font-weight:700;}
+
+  /* ---------- PATCH NOTES ---------- */
+  .patch-group{margin-bottom:30px;}
+  .patch-group h3{font-family:var(--font-display); font-weight:800; font-size:15px; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent2); margin:0 0 12px;}
+  .patch-row{
+    display:flex; align-items:center; gap:16px; padding:13px 16px;
+    border:1px solid var(--border); background:var(--panel);
+    margin-bottom:8px; transition:border-color .15s, transform .15s;
+  }
+  .patch-row:hover{border-color:var(--accent); transform:translateX(3px);}
+  .patch-version{
+    font-family:var(--font-mono); font-weight:700; font-size:13px; color:var(--accent);
+    background:rgba(var(--accent-rgb),0.08); border:1px solid var(--border-hi);
+    padding:5px 10px; flex-shrink:0; min-width:76px; text-align:center;
+  }
+  .patch-info{flex:1; min-width:0;}
+  .patch-name{font-family:var(--font-body); font-weight:700; font-size:14px;}
+  .patch-meta{font-family:var(--font-mono); font-size:11px; color:var(--text-faint); margin-top:2px;}
+  .patch-link{
+    flex-shrink:0; padding:8px 16px; border:1px solid var(--accent); color:var(--accent);
+    text-decoration:none; font-family:var(--font-display); font-weight:700; font-size:10.5px;
+    letter-spacing:0.05em; text-transform:uppercase; transition:all .15s; white-space:nowrap;
+  }
+  .patch-link:hover{background:rgba(var(--accent-rgb),0.12); box-shadow:0 0 12px rgba(var(--accent-rgb),0.25);}
 
   /* ---------- SETTINGS ---------- */
   .settings-shell{max-width:900px; margin:0 auto; padding:0 32px 60px;}
@@ -528,6 +554,10 @@
     .settings-shell{ padding:0 16px 60px; }
     .theme-grid{ grid-template-columns:1fr 1fr; gap:10px; }
     #seasons-container{ padding:0 16px 60px; }
+    #patchnotes-status-line{ padding:0 16px 20px; }
+    #patchnotes-container{ padding:0 16px 60px; }
+    .patch-row{ flex-wrap:wrap; gap:10px; }
+    .patch-link{ margin-left:auto; }
     .season-grid{ grid-template-columns:1fr; gap:14px; }
     .season-countdown-box{ padding:18px 14px 16px; }
     .load-more-wrap{ padding-bottom:50px; }
@@ -562,6 +592,7 @@
     <button data-tab="shop">Item Shop</button>
     <button data-tab="battlepass">Battle Pass</button>
     <button data-tab="seasons">Seasons</button>
+    <button data-tab="patchnotes">Patch Notes</button>
     <button data-tab="news">News</button>
     <button data-tab="wishlist">Wishlist</button>
     <button data-tab="locker">Locker</button>
@@ -669,6 +700,24 @@
     </div>
 
     <div id="seasons-container"></div>
+  </section>
+
+  <!-- ===================== PATCH NOTES TAB ===================== -->
+  <section id="tab-patchnotes">
+    <div class="hero">
+      <div class="eyebrow">Update Log</div>
+      <h1>Patch<br>Notes.</h1>
+      <p>Every major Fortnite update, in order — one entry per season, linking out to that update's complete patch notes.</p>
+      <div class="stats-row" id="patchnotes-stats-row">
+        <span><b id="patchnotes-count">—</b> updates listed</span>
+      </div>
+    </div>
+
+    <div id="patchnotes-status-line">
+      <span id="patchnotes-status">There's no API for patch notes — this list is hand-built, one major version per season, linking to each season's full patch history.</span>
+    </div>
+
+    <div id="patchnotes-container"></div>
   </section>
 
   <!-- ===================== NEWS TAB ===================== -->
@@ -937,6 +986,8 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
       renderLocker();
     } else if(btn.dataset.tab === 'seasons'){
       renderSeasons();
+    } else if(btn.dataset.tab === 'patchnotes'){
+      renderPatchNotes();
     } else if(btn.dataset.tab === 'settings'){
       renderThemeSettings();
     }
@@ -1351,6 +1402,96 @@ function tickSeasonCountdown(){
 }
 // keep the countdown ticking even before the tab is first opened
 renderSeasons();
+
+/* ============================================================
+   PATCH NOTES: one major version per season, chronological.
+   There's no API for patch notes (Epic doesn't consistently
+   publish per-version pages on fortnite.com anymore, especially
+   for recent seasons), so each entry links to that season's
+   Fandom Wiki page instead — verified to exist for every season
+   below, and it documents the full "New Features & Changes" for
+   every version within that season, not just the launch patch.
+   Version numbers bump by 1 each season/mini-season, verified
+   against known values (v33.00 = Ch6 S1, v39–41 = Ch7 S1–S3).
+   ============================================================ */
+const PATCH_NOTES_LINKS = {
+  '1-1':{version:'v1.8',  wiki:'Season_1'},
+  '1-2':{version:'v2.1',  wiki:'Season_2'},
+  '1-3':{version:'v3.0',  wiki:'Season_3'},
+  '1-4':{version:'v4.0',  wiki:'Season_4'},
+  '1-5':{version:'v5.10', wiki:'Season_5'},
+  '1-6':{version:'v6.00', wiki:'Season_6'},
+  '1-7':{version:'v7.00', wiki:'Season_7'},
+  '1-8':{version:'v8.00', wiki:'Season_8'},
+  '1-9':{version:'v9.00', wiki:'Season_9'},
+  '1-X':{version:'v10.00',wiki:'Season_X'},
+  '2-1':{version:'v11.00',wiki:'Chapter_2:_Season_1'},
+  '2-2':{version:'v12.00',wiki:'Chapter_2:_Season_2'},
+  '2-3':{version:'v13.00',wiki:'Chapter_2:_Season_3'},
+  '2-4':{version:'v14.00',wiki:'Chapter_2:_Season_4'},
+  '2-5':{version:'v15.00',wiki:'Chapter_2:_Season_5'},
+  '2-6':{version:'v16.00',wiki:'Chapter_2:_Season_6'},
+  '2-7':{version:'v17.00',wiki:'Chapter_2:_Season_7'},
+  '2-8':{version:'v18.00',wiki:'Chapter_2:_Season_8'},
+  '3-1':{version:'v19.00',wiki:'Chapter_3:_Season_1'},
+  '3-2':{version:'v20.00',wiki:'Chapter_3:_Season_2'},
+  '3-3':{version:'v21.00',wiki:'Chapter_3:_Season_3'},
+  '3-4':{version:'v22.00',wiki:'Chapter_3:_Season_4'},
+  '4-1':{version:'v23.00',wiki:'Chapter_4:_Season_1'},
+  '4-2':{version:'v24.00',wiki:'Chapter_4:_Season_2'},
+  '4-3':{version:'v25.00',wiki:'Chapter_4:_Season_3'},
+  '4-4':{version:'v26.00',wiki:'Chapter_4:_Season_4'},
+  '4-OG':{version:'v27.00',wiki:'Chapter_4:_Season_OG'},
+  '5-1':{version:'v28.00',wiki:'Chapter_5:_Season_1'},
+  '5-2':{version:'v29.00',wiki:'Chapter_5:_Season_2'},
+  '5-3':{version:'v30.00',wiki:'Chapter_5:_Season_3'},
+  '5-4':{version:'v31.00',wiki:'Chapter_5:_Season_4'},
+  '5-Remix':{version:'v32.00',wiki:'Chapter_2_Remix'},
+  '6-1':{version:'v33.00',wiki:'Chapter_6:_Season_1'},
+  '6-2':{version:'v34.00',wiki:'Chapter_6:_Season_2'},
+  '6-GB':{version:'v35.00',wiki:'Galactic_Battle'},
+  '6-3':{version:'v36.00',wiki:'Chapter_6:_Season_3'},
+  '6-4':{version:'v37.00',wiki:'Chapter_6:_Season_4'},
+  '6-Simp':{version:'v38.00',wiki:'Chapter_6:_Mini_Season_2'},
+  '7-1':{version:'v39.00',wiki:'Chapter_7:_Season_1'},
+  '7-2':{version:'v40.00',wiki:'Chapter_7:_Season_2'},
+  '7-3':{version:'v41.00',wiki:'Chapter_7:_Season_3'},
+};
+function patchNotesUrl(entry){
+  return `https://fortnite.fandom.com/wiki/${entry.wiki}`;
+}
+
+function renderPatchNotes(){
+  const container = document.getElementById('patchnotes-container');
+  let count = 0;
+
+  // SEASONS_DATA is already newest-first; walk it in that order so Patch
+  // Notes reads newest-update-first too, grouped by chapter like Seasons.
+  const chapters = [...new Set(SEASONS_DATA.map(s => s.chapter))];
+  container.innerHTML = chapters.map(ch=>{
+    const items = SEASONS_DATA.filter(s => s.chapter === ch);
+    const rows = items.map(s=>{
+      const key = `${s.chapter}-${s.code}`;
+      const entry = PATCH_NOTES_LINKS[key];
+      if(!entry) return '';
+      count++;
+      const subtitle = s.theme && s.theme !== 'Mini-Season' ? s.theme : 'Mini-Update';
+      return `
+      <div class="patch-row">
+        <span class="patch-version">${escapeHtml(entry.version)}</span>
+        <div class="patch-info">
+          <div class="patch-name">Chapter ${s.chapter} ${escapeHtml(seasonLabel(s))}</div>
+          <div class="patch-meta">${escapeHtml(subtitle)} · ${fmtSeasonDates(s)}</div>
+        </div>
+        <a class="patch-link" href="${patchNotesUrl(entry)}" target="_blank" rel="noopener">Patch Notes</a>
+      </div>`;
+    }).join('');
+    if(!rows.trim()) return '';
+    return `<div class="patch-group"><h3>Chapter ${ch}</h3>${rows}</div>`;
+  }).join('');
+
+  document.getElementById('patchnotes-count').textContent = count;
+}
 
 function render(){
   let filtered = ALL_ITEMS.filter(matchesFilters);
