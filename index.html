@@ -1209,6 +1209,7 @@ function renderLocker(){
 // own Battle Pass tab for that season.
 const TRAILER_FALLBACK = 'https://www.youtube.com/@Fortnite/videos';
 const SEASONS_DATA = [
+  { chapter:7, code:'4',   name:'Season 4',      theme:'Gaming Legends',            start:'2026-08-19', end:'2026-10-15', trailer:null },
   { chapter:7, code:'3',   name:'Season 3',      theme:'Runners',            start:'2026-06-06', end:'2026-08-19', trailer:"https://www.youtube.com/watch?v=V5L24DFTFUo" },
   { chapter:7, code:'2',   name:'Season 2',      theme:'Showdown',           start:'2026-03-19', end:'2026-06-05', trailer:"https://www.youtube.com/watch?v=m-c_3degE60" },
   { chapter:7, code:'1',   name:'Season 1',      theme:'Pacific Break',      start:'2025-11-29', end:'2026-03-19', trailer:"https://www.youtube.com/watch?v=Eln66CJHna8" },
@@ -1456,6 +1457,7 @@ const PATCH_NOTES_LINKS = {
   '7-1':{version:'v39.00',wiki:'Chapter_7:_Season_1'},
   '7-2':{version:'v40.00',wiki:'Chapter_7:_Season_2'},
   '7-3':{version:'v41.00',wiki:'Chapter_7:_Season_3'},
+  '7-4':{version:'v42.00',wiki:'Chapter_7:_Season_3'},
 };
 function patchNotesUrl(entry){
   return `https://fortnite.fandom.com/wiki/${entry.wiki}`;
