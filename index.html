@@ -271,10 +271,15 @@
   .season-banner{
     aspect-ratio:16/9; position:relative; overflow:hidden;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
-    background:
+    background-image:
+      var(--banner-img, none),
+      linear-gradient(180deg, rgba(4,6,8,0.1) 0%, rgba(4,6,8,0.35) 55%, rgba(4,6,8,0.8) 100%),
       radial-gradient(circle at 30% 25%, hsla(var(--hue,190),70%,55%,0.5), transparent 60%),
       radial-gradient(circle at 75% 80%, hsla(calc(var(--hue,190) + 40),80%,50%,0.4), transparent 55%),
       linear-gradient(160deg,#0e1a1d,#05080a);
+    background-size:cover, cover, auto, auto, auto;
+    background-position:center;
+    background-repeat:no-repeat;
   }
   .season-banner::after{content:''; position:absolute; inset:0;
     background-image:linear-gradient(rgba(var(--accent-rgb),0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb),0.06) 1px, transparent 1px);
@@ -283,6 +288,9 @@
   .season-banner .b-season{font-family:var(--font-display); font-weight:800; font-size:clamp(26px,4vw,38px); text-transform:uppercase; color:#fff; text-shadow:0 0 18px rgba(0,0,0,0.6); z-index:1;}
   .season-banner .b-theme{font-family:var(--font-mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text); opacity:0.7; z-index:1; margin-top:2px; text-align:center; padding:0 10px;}
   .season-banner .b-now{position:absolute; top:10px; right:10px; z-index:2; background:var(--yellow); color:#241c00; font-family:var(--font-display); font-weight:800; font-size:10px; letter-spacing:0.08em; padding:4px 9px;}
+  .season-banner.has-photo .b-ch,
+  .season-banner.has-photo .b-season,
+  .season-banner.has-photo .b-theme{display:none;}
   .season-body{padding:16px 16px 18px;}
   .season-name{font-family:var(--font-display); font-weight:800; font-size:16px; text-transform:uppercase; letter-spacing:0.01em;}
   .season-sub{font-family:var(--font-mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.04em; margin-top:3px;}
@@ -859,6 +867,11 @@ const THEMES = [
   { id:'frost',   name:'Arctic Frost',  accent:'#7dd3fc', accent2:'#f0abfc' },
   { id:'gold',    name:'Royal Gold',    accent:'#fbbf24', accent2:'#7c3aed' },
   { id:'hotpink', name:'Hot Pink Punk', accent:'#ec4899', accent2:'#38bdf8' },
+  { id:'mono',    name:'Monochrome',    accent:'#e5e7eb', accent2:'#9ca3af' },
+  { id:'amber',   name:'Retro Terminal',accent:'#ffb300', accent2:'#cc7a00' },
+  { id:'pastel',  name:'Pastel Dream',  accent:'#a5d8ff', accent2:'#ffc9de' },
+  { id:'rosegold',name:'Rose Gold',     accent:'#f4c2c2', accent2:'#d4af37' },
+  { id:'stealth', name:'Stealth',       accent:'#94a3b8', accent2:'#64748b' },
 ];
 const THEME_KEY = 'lootlog_theme';
 
@@ -1193,6 +1206,23 @@ function seasonLabel(s){ return s.name; }
 function seasonFullName(s){ return `Chapter ${s.chapter} ${s.name}`; }
 function daysBetween(a, b){ return Math.round((b - a) / 86400000); }
 
+// Season banner photos, pulled from the laytonio67-crypto/fortnite-season-art
+// GitHub repo (no API for season artwork exists). Layout there matches the
+// map-history repo: chapter_<chapter>/season_<code>/ch<chapter>-<slug>.jpg —
+// e.g. Chapter 7 Season 3 -> chapter_7/season_3/ch7-s3.jpg. Missing files
+// simply fall back to the gradient placeholder — nothing breaks, no broken-
+// image icon, since this loads as a CSS background rather than an <img>.
+const SEASON_IMG_REPO = 'https://raw.githubusercontent.com/laytonio67-crypto/fortnite-season-art/main';
+function seasonImgSlug(code){
+  if(/^\d+$/.test(code)) return 's' + code;
+  if(code === 'X') return 'sx';
+  return code.toLowerCase();
+}
+function seasonImgUrl(s){
+  const folder = s.code.toLowerCase(); // repo uses chapter_N/season_<code>/ch<chapter>-<slug>.jpg
+  return `${SEASON_IMG_REPO}/chapter_${s.chapter}/season_${folder}/ch${s.chapter}-${seasonImgSlug(s.code)}.jpg`;
+}
+
 const MONTHS =['January','February','March','April','May','June','July','August','September','October','November','December'];
 function fmtDay(d){ return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`; }
 function fmtSeasonDates(s){
@@ -1234,9 +1264,10 @@ function renderSeasons(){
       }
       const trailerUrl = s.trailer || TRAILER_FALLBACK;
       const trailerTitle = s.trailer ? 'Official trailer' : "Direct link coming — opens Fortnite's official YouTube channel";
+      const imgUrl = seasonImgUrl(s);
       return `
       <div class="season-card${isCurrent ? ' current' : ''}">
-        <div class="season-banner" style="--hue:${hue}">
+        <div class="season-banner" style="--hue:${hue}; --banner-img:url('${imgUrl}')" data-img="${imgUrl}">
           ${isCurrent ? '<span class="b-now">NOW</span>' : ''}
           <span class="b-ch">Chapter ${s.chapter}</span>
           <span class="b-season">${escapeHtml(s.code === 'X' || /^\d+$/.test(s.code) ? (/^\d+$/.test(s.code) ? 'S'+s.code : s.code) : s.code)}</span>
@@ -1257,6 +1288,16 @@ function renderSeasons(){
       <h3 style="font-family:var(--font-display); font-weight:800; font-size:15px; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent2); margin:0 0 16px;">Chapter ${ch}</h3>
       <div class="season-grid">${cards}</div>`;
   }).join('');
+
+  // Test-load each season's background photo from the GitHub repo — if it
+  // actually exists there, hide the "Chapter X / S# / Theme" text overlay on
+  // the banner (the same info still shows right below in the card body either
+  // way). Seasons with no photo yet just keep the text overlay.
+  container.querySelectorAll('.season-banner[data-img]').forEach(banner=>{
+    const probe = new Image();
+    probe.onload = () => banner.classList.add('has-photo');
+    probe.src = banner.dataset.img;
+  });
 
   startSeasonCountdown();
 }
