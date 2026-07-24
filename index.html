@@ -242,6 +242,59 @@
   }
   .news-card p{color:var(--text-dim); font-size:14.5px; line-height:1.6; max-width:640px;}
 
+  /* ---------- SEASONS ---------- */
+  .season-countdown-box{
+    max-width:720px; margin:34px auto 0; padding:22px 24px 20px;
+    border:2px solid var(--yellow); background:rgba(255,204,51,0.04);
+    box-shadow:0 0 34px -6px rgba(255,204,51,0.35);
+  }
+  .season-progress-label{font-family:var(--font-mono); font-size:12.5px; color:var(--text-dim); margin-bottom:12px;}
+  .season-progress-label b{color:var(--accent);}
+  .season-progress{height:8px; background:var(--panel); border:1px solid var(--border); overflow:hidden; margin-bottom:18px;}
+  .season-progress-fill{height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent2)); box-shadow:0 0 12px rgba(0,240,255,0.5); transition:width .4s ease;}
+  #season-countdown{font-size:clamp(30px,6vw,52px); letter-spacing:0.06em;}
+  .season-countdown-units{display:flex; justify-content:center; gap:clamp(18px,7vw,58px); margin-top:4px; font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; letter-spacing:0.14em; color:var(--text-faint);}
+  .season-ends-line{margin-top:16px; font-family:var(--font-mono); font-size:12.5px; color:var(--text-dim); line-height:1.7;}
+  .season-ends-line b{color:var(--accent2);}
+
+  #seasons-container{max-width:1240px; margin:0 auto; padding:0 32px 60px;}
+  .season-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px; margin-bottom:34px;}
+  .season-card{
+    border:1px solid var(--border); background:var(--panel); overflow:hidden;
+    display:flex; flex-direction:column; position:relative;
+    transition:transform .15s, border-color .15s, box-shadow .15s;
+  }
+  .season-card:hover{transform:translateY(-4px); border-color:var(--accent); box-shadow:0 14px 34px -14px rgba(0,0,0,0.7), 0 0 18px -6px var(--accent);}
+  .season-card.current{border-color:var(--yellow); box-shadow:0 0 22px -6px rgba(255,204,51,0.5);}
+  .season-banner{
+    aspect-ratio:16/9; position:relative; overflow:hidden;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    background:
+      radial-gradient(circle at 30% 25%, hsla(var(--hue,190),70%,55%,0.5), transparent 60%),
+      radial-gradient(circle at 75% 80%, hsla(calc(var(--hue,190) + 40),80%,50%,0.4), transparent 55%),
+      linear-gradient(160deg,#0e1a1d,#05080a);
+  }
+  .season-banner::after{content:''; position:absolute; inset:0;
+    background-image:linear-gradient(rgba(0,240,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.06) 1px, transparent 1px);
+    background-size:26px 26px; mask-image:linear-gradient(180deg, black, transparent);}
+  .season-banner .b-ch{font-family:var(--font-mono); font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--text); opacity:0.85; z-index:1;}
+  .season-banner .b-season{font-family:var(--font-display); font-weight:800; font-size:clamp(26px,4vw,38px); text-transform:uppercase; color:#fff; text-shadow:0 0 18px rgba(0,0,0,0.6); z-index:1;}
+  .season-banner .b-theme{font-family:var(--font-mono); font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text); opacity:0.7; z-index:1; margin-top:2px; text-align:center; padding:0 10px;}
+  .season-banner .b-now{position:absolute; top:10px; right:10px; z-index:2; background:var(--yellow); color:#241c00; font-family:var(--font-display); font-weight:800; font-size:10px; letter-spacing:0.08em; padding:4px 9px;}
+  .season-body{padding:16px 16px 18px;}
+  .season-name{font-family:var(--font-display); font-weight:800; font-size:16px; text-transform:uppercase; letter-spacing:0.01em;}
+  .season-sub{font-family:var(--font-mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.04em; margin-top:3px;}
+  .season-btns{display:flex; gap:8px; margin:13px 0 14px;}
+  .season-btn{
+    flex:1; text-align:center; padding:9px 6px; border:1px solid var(--accent); color:var(--accent);
+    background:transparent; text-decoration:none; font-family:var(--font-display); font-weight:700; font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase;
+    line-height:1.4; cursor:pointer; transition:all .15s;
+  }
+  .season-btn:hover{background:rgba(0,240,255,0.12); box-shadow:0 0 12px rgba(0,240,255,0.25);}
+  .season-dates{font-family:var(--font-mono); font-size:12.5px; color:var(--text); font-weight:500;}
+  .season-meta{font-family:var(--font-mono); font-size:11px; color:var(--text-faint); margin-top:5px;}
+  .season-meta .now{color:var(--yellow); font-weight:700;}
+
   /* ---------- LOCKER BUTTON (add-to-locker, sits left of the ★) ---------- */
   .locker-btn{
     position:absolute; top:6px; right:36px; z-index:4; width:26px; height:26px;
@@ -443,6 +496,9 @@
     #bp-grid{ padding:0 16px 60px; }
     .grid{ padding:0 16px 60px; grid-template-columns:repeat(auto-fill,minmax(135px,1fr)); gap:12px; }
     .news-list{ padding:0 16px 60px; }
+    #seasons-container{ padding:0 16px 60px; }
+    .season-grid{ grid-template-columns:1fr; gap:14px; }
+    .season-countdown-box{ padding:18px 14px 16px; }
     .load-more-wrap{ padding-bottom:50px; }
 
     .card .name{ font-size:13px; }
@@ -474,6 +530,7 @@
     <button class="active" data-tab="cosmetics">Cosmetics</button>
     <button data-tab="shop">Item Shop</button>
     <button data-tab="battlepass">Battle Pass</button>
+    <button data-tab="seasons">Seasons</button>
     <button data-tab="news">News</button>
     <button data-tab="wishlist">Wishlist</button>
     <button data-tab="locker">Locker</button>
@@ -559,6 +616,27 @@
     </div>
 
     <div id="bp-grid"></div>
+  </section>
+
+  <!-- ===================== SEASONS TAB ===================== -->
+  <section id="tab-seasons">
+    <div class="hero">
+      <div class="eyebrow">Season Countdown</div>
+      <h1 id="season-hero-title">Season<br>Countdown.</h1>
+      <p id="season-hero-sub">Time left in the current season — and the full archive of the ones before it.</p>
+
+      <div class="season-countdown-box" id="season-countdown-box">
+        <div class="season-progress-label" id="season-progress-label">—</div>
+        <div class="season-progress"><div class="season-progress-fill" id="season-progress-fill"></div></div>
+        <div class="countdown" id="season-countdown">--:--:--:--</div>
+        <div class="season-countdown-units">
+          <span>Days</span><span>Hrs</span><span>Min</span><span>Sec</span>
+        </div>
+        <div class="season-ends-line" id="season-ends-line">—</div>
+      </div>
+    </div>
+
+    <div id="seasons-container"></div>
   </section>
 
   <!-- ===================== NEWS TAB ===================== -->
@@ -740,6 +818,8 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
       renderWishlist();
     } else if(btn.dataset.tab === 'locker'){
       renderLocker();
+    } else if(btn.dataset.tab === 'seasons'){
+      renderSeasons();
     }
   });
 });
@@ -944,6 +1024,187 @@ function renderLocker(){
   attachCardHandlers(grid);
 }
 
+/* ============================================================
+   SEASONS: live countdown + dynamically-computed archive.
+   There's no API for season artwork, dates, or trailer links,
+   so this list is hand-maintained — add a new entry each season.
+   Everything derived from the dates (duration, "days ago",
+   countdown, % complete) updates itself automatically.
+   ============================================================ */
+// Every BR season, Chapter 1 Season 1 → current, including the mini-seasons.
+// `code` = short banner text · `name` = designation · `theme` = subtitle ·
+// `trailer` = verified direct YouTube URL (null → falls back to Epic's official
+// channel, never a search page) · `bpKey` = key into BATTLE_PASS_SEASONS + the
+// live-feed introduction key, so the Battle Pass button can deep-link into our
+// own Battle Pass tab for that season.
+const TRAILER_FALLBACK = 'https://www.youtube.com/@Fortnite/videos';
+const SEASONS_DATA = [
+  { chapter:7, code:'3',   name:'Season 3',      theme:'Runners',            start:'2026-06-06', end:'2026-08-19', trailer:"https://www.youtube.com/watch?v=V5L24DFTFUo" },
+  { chapter:7, code:'2',   name:'Season 2',      theme:'Showdown',           start:'2026-03-19', end:'2026-06-05', trailer:"https://www.youtube.com/watch?v=m-c_3degE60" },
+  { chapter:7, code:'1',   name:'Season 1',      theme:'Pacific Break',      start:'2025-11-29', end:'2026-03-19', trailer:"https://www.youtube.com/watch?v=Eln66CJHna8" },
+  { chapter:6, code:'Simp',name:'The Simpsons',  theme:'Mini-Season',        start:'2025-11-01', end:'2025-11-29', trailer:"https://www.youtube.com/watch?v=mqQDlH9ztL4", apiKey:'6-6' },
+  { chapter:6, code:'4',   name:'Season 4',      theme:"Shock 'N Awesome",   start:'2025-08-07', end:'2025-11-01', trailer:"https://www.youtube.com/watch?v=7ZIbokU9tRg", apiKey:'6-5' },
+  { chapter:6, code:'3',   name:'Season 3',      theme:'Super',              start:'2025-06-07', end:'2025-08-07', trailer:"https://www.youtube.com/watch?v=X_zzh-g2a4M", apiKey:'6-4' },
+  { chapter:6, code:'GB',  name:'Galactic Battle',theme:'Mini-Season',       start:'2025-05-02', end:'2025-06-07', trailer:"https://www.youtube.com/watch?v=iDzAmxY2i6Q", apiKey:'6-3' },
+  { chapter:6, code:'2',   name:'Season 2',      theme:'Lawless',            start:'2025-02-21', end:'2025-05-02', trailer:"https://www.youtube.com/watch?v=66eAN56g7D8" },
+  { chapter:6, code:'1',   name:'Season 1',      theme:'Hunters',            start:'2024-12-01', end:'2025-02-21', trailer:"https://www.youtube.com/watch?v=LrfzND9Dgq8" },
+  { chapter:5, code:'Remix',name:'Chapter 2 Remix',theme:'Mini-Season',      start:'2024-11-02', end:'2024-11-30', trailer:"https://www.youtube.com/watch?v=W6W-o_z0cdE" },
+  { chapter:5, code:'4',   name:'Season 4',      theme:'Absolute Doom',      start:'2024-08-16', end:'2024-11-02', trailer:"https://www.youtube.com/watch?v=5uE0XFJSVZA" },
+  { chapter:5, code:'3',   name:'Season 3',      theme:'Wrecked',            start:'2024-05-24', end:'2024-08-15', trailer:"https://www.youtube.com/watch?v=0fRBmXtfo_8" },
+  { chapter:5, code:'2',   name:'Season 2',      theme:'Myths & Mortals',    start:'2024-03-08', end:'2024-05-24', trailer:"https://www.youtube.com/watch?v=c22tooe3GOk" },
+  { chapter:5, code:'1',   name:'Season 1',      theme:'Underground',        start:'2023-12-03', end:'2024-03-08', trailer:"https://www.youtube.com/watch?v=Wjij-OX9RKI" },
+  { chapter:4, code:'OG',  name:'Fortnite OG',   theme:'Mini-Season',        start:'2023-11-03', end:'2023-12-02', trailer:"https://www.youtube.com/watch?v=CZLcCeH2dHU" },
+  { chapter:4, code:'4',   name:'Season 4',      theme:'Last Resort',        start:'2023-08-25', end:'2023-11-03', trailer:"https://www.youtube.com/watch?v=p_DReaOoEjM" },
+  { chapter:4, code:'3',   name:'Season 3',      theme:'Wilds',              start:'2023-06-09', end:'2023-08-25', trailer:"https://www.youtube.com/watch?v=P2JnTforl_4" },
+  { chapter:4, code:'2',   name:'Season 2',      theme:'Mega',               start:'2023-03-10', end:'2023-06-08', trailer:"https://www.youtube.com/watch?v=goCoXdp7k2E" },
+  { chapter:4, code:'1',   name:'Season 1',      theme:'A New Beginning',    start:'2022-12-04', end:'2023-03-10', trailer:"https://www.youtube.com/watch?v=JW-KIbV9PRU" },
+  { chapter:3, code:'4',   name:'Season 4',      theme:'Paradise',           start:'2022-09-18', end:'2022-12-03', trailer:"https://www.youtube.com/watch?v=miht6Lgkqb0" },
+  { chapter:3, code:'3',   name:'Season 3',      theme:"Vibin'",             start:'2022-06-05', end:'2022-09-18', trailer:"https://www.youtube.com/watch?v=H5EfrMzg9JA" },
+  { chapter:3, code:'2',   name:'Season 2',      theme:'Resistance',         start:'2022-03-20', end:'2022-06-04', trailer:"https://www.youtube.com/watch?v=6M3-AwaIwzM" },
+  { chapter:3, code:'1',   name:'Season 1',      theme:'Flipped',            start:'2021-12-05', end:'2022-03-19', trailer:"https://www.youtube.com/watch?v=knAYcg7Tt8E" },
+  { chapter:2, code:'8',   name:'Season 8',      theme:'Cubed',              start:'2021-09-13', end:'2021-12-04', trailer:"https://www.youtube.com/watch?v=2lBFoxLvYHs" },
+  { chapter:2, code:'7',   name:'Season 7',      theme:'Invasion',           start:'2021-06-08', end:'2021-09-12', trailer:"https://www.youtube.com/watch?v=-NycdXYBeG4" },
+  { chapter:2, code:'6',   name:'Season 6',      theme:'Primal',             start:'2021-03-16', end:'2021-06-07', trailer:"https://www.youtube.com/watch?v=xNWaHd8tj2E" },
+  { chapter:2, code:'5',   name:'Season 5',      theme:'Zero Point',         start:'2020-12-02', end:'2021-03-15', trailer:"https://www.youtube.com/watch?v=3-lP1j6MvW4" },
+  { chapter:2, code:'4',   name:'Season 4',      theme:'Nexus War',          start:'2020-08-27', end:'2020-12-01', trailer:"https://www.youtube.com/watch?v=Fcl30mWtJQU" },
+  { chapter:2, code:'3',   name:'Season 3',      theme:'Splash Down',        start:'2020-06-17', end:'2020-08-26', trailer:"https://www.youtube.com/watch?v=9FCRaSwU3W8" },
+  { chapter:2, code:'2',   name:'Season 2',      theme:'Top Secret',         start:'2020-02-20', end:'2020-06-16', trailer:"https://www.youtube.com/watch?v=JgPXMxW7zJk" },
+  { chapter:2, code:'1',   name:'Season 1',      theme:'New World',          start:'2019-10-15', end:'2020-02-19', trailer:"https://www.youtube.com/watch?v=3KgmY5NrEzU" },
+  { chapter:1, code:'X',   name:'Season X',      theme:'Out of Time',        start:'2019-08-01', end:'2019-10-13', trailer:"https://www.youtube.com/watch?v=2rUt9qxohRM" },
+  { chapter:1, code:'9',   name:'Season 9',      theme:'The Future Is Yours',start:'2019-05-09', end:'2019-07-31', trailer:"https://www.youtube.com/watch?v=Y__AysHzUWo" },
+  { chapter:1, code:'8',   name:'Season 8',      theme:'X Marks the Spot',   start:'2019-02-28', end:'2019-05-08', trailer:"https://www.youtube.com/watch?v=HoFNer6dqi8" },
+  { chapter:1, code:'7',   name:'Season 7',      theme:'You Better Watch Out',start:'2018-12-06', end:'2019-02-27', trailer:"https://www.youtube.com/watch?v=Fm9L1NosXps" },
+  { chapter:1, code:'6',   name:'Season 6',      theme:'Darkness Rises',     start:'2018-09-27', end:'2018-12-05', trailer:"https://www.youtube.com/watch?v=xAtebIYU85U" },
+  { chapter:1, code:'5',   name:'Season 5',      theme:'Worlds Collide',     start:'2018-07-12', end:'2018-09-26', trailer:"https://www.youtube.com/watch?v=F3UNnrr1pg4" },
+  { chapter:1, code:'4',   name:'Season 4',      theme:'Brace for Impact',   start:'2018-05-01', end:'2018-07-11', trailer:"https://www.youtube.com/watch?v=fDRrqJU4-Tk" },
+  { chapter:1, code:'3',   name:'Season 3',      theme:'Meteor Strike',      start:'2018-02-22', end:'2018-04-30', trailer:null },
+  { chapter:1, code:'2',   name:'Season 2',      theme:'Fort Knights',       start:'2017-12-14', end:'2018-02-21', trailer:null },
+  { chapter:1, code:'1',   name:'Season 1',      theme:'First Steps',        start:'2017-10-26', end:'2017-12-13', trailer:"https://www.youtube.com/watch?v=WJW-bzXZM8M" },
+];
+let seasonCountdownTimer = null;
+
+function seasonLabel(s){ return s.name; }
+function seasonFullName(s){ return `Chapter ${s.chapter} ${s.name}`; }
+function daysBetween(a, b){ return Math.round((b - a) / 86400000); }
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function fmtDay(d){ return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`; }
+function fmtSeasonDates(s){
+  const a = new Date(s.start + 'T00:00:00Z'), b = new Date(s.end + 'T00:00:00Z');
+  if(a.getUTCFullYear() === b.getUTCFullYear()){
+    return `${fmtDay(a)} – ${fmtDay(b)}, ${b.getUTCFullYear()}`;
+  }
+  return `${fmtDay(a)}, ${a.getUTCFullYear()} – ${fmtDay(b)}, ${b.getUTCFullYear()}`;
+}
+
+function getCurrentSeason(){
+  const now = Date.now();
+  return SEASONS_DATA.find(s =>
+    now >= new Date(s.start + 'T00:00:00Z').getTime() && now < new Date(s.end + 'T00:00:00Z').getTime()
+  ) || null;
+}
+
+function renderSeasons(){
+  const container = document.getElementById('seasons-container');
+  const chapters = [...new Set(SEASONS_DATA.map(s => s.chapter))];
+  const current = getCurrentSeason();
+  const now = Date.now();
+
+  container.innerHTML = chapters.map(ch=>{
+    const items = SEASONS_DATA.filter(s => s.chapter === ch);
+    const cards = items.map(s=>{
+      const a = new Date(s.start + 'T00:00:00Z'), b = new Date(s.end + 'T00:00:00Z');
+      const lasted = daysBetween(a, b);
+      const isCurrent = current && current.chapter === s.chapter && current.code === s.code;
+      const hue = 150 + s.chapter * 22; // vary banner colour per chapter
+      let metaLine;
+      if(isCurrent){
+        metaLine = `<span class="now">● NOW · ${lasted} day season</span>`;
+      } else if(b.getTime() > now){
+        metaLine = `Upcoming · ${lasted} days long`;
+      } else {
+        const ago = daysBetween(b, new Date(now));
+        metaLine = `Ended ${ago} day${ago===1?'':'s'} ago · lasted ${lasted} days`;
+      }
+      const trailerUrl = s.trailer || TRAILER_FALLBACK;
+      const trailerTitle = s.trailer ? 'Official trailer' : "Direct link coming — opens Fortnite's official YouTube channel";
+      return `
+      <div class="season-card${isCurrent ? ' current' : ''}">
+        <div class="season-banner" style="--hue:${hue}">
+          ${isCurrent ? '<span class="b-now">NOW</span>' : ''}
+          <span class="b-ch">Chapter ${s.chapter}</span>
+          <span class="b-season">${escapeHtml(s.code === 'X' || /^\d+$/.test(s.code) ? (/^\d+$/.test(s.code) ? 'S'+s.code : s.code) : s.code)}</span>
+          ${s.theme && s.theme !== 'Mini-Season' ? `<span class="b-theme">${escapeHtml(s.theme)}</span>` : (s.theme === 'Mini-Season' ? `<span class="b-theme">Mini-Season</span>` : '')}
+        </div>
+        <div class="season-body">
+          <div class="season-name">${escapeHtml(seasonLabel(s))}</div>
+          <div class="season-sub">${escapeHtml(s.theme && s.theme !== 'Mini-Season' ? s.theme : 'Chapter ' + s.chapter)}</div>
+          <div class="season-btns">
+            <a class="season-btn" href="${trailerUrl}" target="_blank" rel="noopener" title="${trailerTitle}">Trailer</a>
+          </div>
+          <div class="season-dates">${fmtSeasonDates(s)}</div>
+          <div class="season-meta">${metaLine}</div>
+        </div>
+      </div>`;
+    }).join('');
+    return `
+      <h3 style="font-family:var(--font-display); font-weight:800; font-size:15px; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent2); margin:0 0 16px;">Chapter ${ch}</h3>
+      <div class="season-grid">${cards}</div>`;
+  }).join('');
+
+  startSeasonCountdown();
+}
+
+function startSeasonCountdown(){
+  if(seasonCountdownTimer) clearInterval(seasonCountdownTimer);
+  tickSeasonCountdown();
+  seasonCountdownTimer = setInterval(tickSeasonCountdown, 1000);
+}
+function tickSeasonCountdown(){
+  const digitsEl = document.getElementById('season-countdown');
+  const labelEl = document.getElementById('season-progress-label');
+  const fillEl = document.getElementById('season-progress-fill');
+  const endsEl = document.getElementById('season-ends-line');
+  const current = getCurrentSeason();
+
+  if(!current){
+    digitsEl.textContent = '00:00:00:00';
+    labelEl.textContent = 'No active season on record — the archive may need updating.';
+    fillEl.style.width = '0%';
+    endsEl.textContent = '';
+    if(seasonCountdownTimer) clearInterval(seasonCountdownTimer);
+    return;
+  }
+
+  const start = new Date(current.start + 'T00:00:00Z').getTime();
+  const end = new Date(current.end + 'T00:00:00Z').getTime();
+  const now = Date.now();
+  const diff = end - now;
+
+  const pct = Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
+  fillEl.style.width = pct.toFixed(1) + '%';
+
+  if(diff <= 0){
+    digitsEl.textContent = '00:00:00:00';
+    labelEl.innerHTML = `${seasonFullName(current)} has ended.`;
+    endsEl.textContent = '';
+    return;
+  }
+
+  const days = Math.floor(diff / 86400000);
+  const hrs = Math.floor((diff % 86400000) / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  const secs = Math.floor((diff % 60000) / 1000);
+  const p2 = n => String(n).padStart(2, '0');
+  digitsEl.textContent = `${p2(days)}:${p2(hrs)}:${p2(mins)}:${p2(secs)}`;
+
+  labelEl.innerHTML = `${seasonFullName(current)} is <b>${pct.toFixed(0)}%</b> complete · <b>${days}</b> day${days===1?'':'s'} remaining`;
+  const endD = new Date(current.end + 'T00:00:00Z');
+  endsEl.innerHTML = `${seasonFullName(current)} ends on <b>${fmtDay(endD)}, ${endD.getUTCFullYear()}</b>`;
+}
+// keep the countdown ticking even before the tab is first opened
+renderSeasons();
+
 function render(){
   let filtered = ALL_ITEMS.filter(matchesFilters);
 
@@ -1085,6 +1346,13 @@ loadCosmetics();
    fully automatic like the other tabs, and needs a new entry added
    each season.
    ============================================================ */
+// Curated Battle Pass line-ups, keyed by the live feed's introduction key
+// (chapter-season). Ch7 S3 lists full character SETS (each set was BP-exclusive).
+// The recent Ch6/Ch7 seasons list the exact BP OUTFIT names — because those
+// seasons' sets also contain Item Shop skins, so matching by set would wrongly
+// pull in non-Battle-Pass cosmetics. Every name below was verified against the
+// live cosmetics feed. Note: Chapter 6's numbering is offset by the Galactic
+// Battle mini-season, so Super = 6-4 and Shock 'N Awesome = 6-5 in the feed.
 const BATTLE_PASS_SEASONS = {
   '7-3': {
     passName: 'Runners Battle Pass',
@@ -1097,6 +1365,60 @@ const BATTLE_PASS_SEASONS = {
       { title:'Dylan',          sets:['Mercenary Heartbreaker'] },
       { title:'Vanguard Slone', sets:["Island's Innovator"] },
       { title:'John Wick',      sets:['John Wick'], names:['John Wick (Pen & Ink)'] },
+    ]
+  },
+  '7-2': {
+    passName: 'Showdown Battle Pass',
+    pages: [
+      { title:'Battle Pass Skins', names:[
+        'Exalted Ice King','Squibbly','Lady Windfrost','Dasha',
+        'The Foundation (Reforged)','The Order (Reforged)','Elite Jules','Bugs Bunny'
+      ] }
+    ]
+  },
+  '7-1': {
+    passName: 'Pacific Break Battle Pass',
+    pages: [
+      { title:'Battle Pass Skins', names:[
+        'Cat Holloway','Carter Wu','Dark Voyager (Reality Redacted)','Miles Cross',
+        'The Bride','Carina','Marty McFly','Kingston'
+      ] }
+    ]
+  },
+  '6-5': {
+    passName: "Shock 'N Awesome Battle Pass",
+    pages: [
+      { title:'Battle Pass Skins', names:[
+        'UNSC Spartan','Yoo-mi','Agent Patch','Battle Gamer Mae',
+        'Lt. Ripp Slade','Onyx Winter','Green Ranger','Dino Megazord'
+      ] }
+    ]
+  },
+  '6-4': {
+    passName: 'Super Battle Pass',
+    pages: [
+      { title:'Battle Pass Skins', names:[
+        'Robin','Superman','Haylee Skye','Ziggy',
+        'Synthwave','Killswitch','Lightrider','Morgan Myst'
+      ] }
+    ]
+  },
+  '6-2': {
+    passName: 'Lawless Battle Pass',
+    pages: [
+      { title:'Battle Pass Skins', names:[
+        'Outlaw Midas','Big Dill','Cassidy Quinn','Joss',
+        'Fletcher Kane','Valentina','Keisha Cross','Sub-Zero (MK3)'
+      ] }
+    ]
+  },
+  '6-1': {
+    passName: 'Hunters Battle Pass',
+    pages: [
+      { title:'Battle Pass Skins', names:[
+        'Nyanja','Jade','Kendo','Daigo',
+        'Shadow Blade Hope','Hero Baymax','The Night Rose','Godzilla Evolved'
+      ] }
     ]
   }
 };
@@ -1119,7 +1441,6 @@ function renderBattlePass(){
     container.innerHTML = '';
     return;
   }
-
   const seasonKey = `${latest.introduction.chapter}-${latest.introduction.season}`;
   const seasonLabel = (latest.introduction.text || `Chapter ${latest.introduction.chapter}, Season ${latest.introduction.season}`)
     .replace(/^introduced in\s*/i, '').replace(/\.$/, '');
@@ -1127,9 +1448,9 @@ function renderBattlePass(){
 
   const passData = BATTLE_PASS_SEASONS[seasonKey];
   if(!passData){
-    statusEl.textContent = `No curated battle pass list for ${seasonLabel} yet.`;
+    statusEl.textContent = `No curated Battle Pass list for ${seasonLabel} yet.`;
     document.getElementById('bp-count').textContent = '0';
-    container.innerHTML = `<div class="empty-state"><div class="big">Not added yet</div>This season's battle pass line-up hasn't been curated into the site yet — check the Cosmetics tab and sort by newest release date in the meantime.</div>`;
+    container.innerHTML = `<div class="empty-state"><div class="big">Not curated yet</div>This season's Battle Pass line-up hasn't been hand-curated into Loot Log yet — check the Cosmetics tab and sort by newest release date in the meantime.</div>`;
     return;
   }
 
@@ -1143,6 +1464,14 @@ function renderBattlePass(){
       i.introduction && `${i.introduction.chapter}-${i.introduction.season}` === seasonKey &&
       (setNames.has(i.set?.value) || nameSet.has(i.name))
     );
+    // the feed sometimes carries two entries for one skin (e.g. a LEGO build sharing
+    // the name) — collapse to one card per name, preferring the standard BR outfit.
+    const seen = new Map();
+    items.forEach(i=>{
+      const prev = seen.get(i.name);
+      if(!prev || (i.type?.value === 'outfit' && prev.type?.value !== 'outfit')) seen.set(i.name, i);
+    });
+    items = [...seen.values()];
     if(!items.length) continue;
     items.sort((a,b) => (a.type?.value === 'outfit' ? -1 : 1) - (b.type?.value === 'outfit' ? -1 : 1) || a.name.localeCompare(b.name));
     totalCount += items.length;
