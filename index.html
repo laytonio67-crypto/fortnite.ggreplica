@@ -423,6 +423,14 @@
     display:flex; align-items:center; justify-content:center;
   }
   .modal-close:hover{border-color:var(--accent2); color:var(--accent2);}
+  .trailer-modal{
+    position:relative; width:100%; max-width:960px;
+    background:var(--bg-elev-solid); border:1px solid var(--border-hi);
+    box-shadow:0 30px 80px -20px rgba(0,0,0,0.8), 0 0 0 1px var(--accent) inset;
+  }
+  .trailer-frame-wrap{position:relative; width:100%; aspect-ratio:16/9; background:#000;}
+  .trailer-frame-wrap iframe{position:absolute; inset:0; width:100%; height:100%; border:0;}
+  #trailer-modal-backdrop .modal-close{top:-44px; right:0; background:rgba(4,6,8,0.9);}
   .modal-img{
     background:radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--rarity-color,var(--accent)) 22%, transparent), #070d0f 72%);
     display:flex; align-items:center; justify-content:center; padding:30px; min-height:280px;
@@ -763,6 +771,11 @@
       </div>
     </div>
 
+    <div class="stats-row" id="locker-value-row" style="margin-top:0;">
+      <span><b id="locker-value">—</b> <img id="locker-value-icon" class="vbuck-icon" alt="V-Bucks" style="width:14px; height:14px; vertical-align:-2px; margin:0 2px;"> estimated locker value</span>
+    </div>
+    <div id="locker-value-note" style="max-width:900px; margin:14px auto 0; padding:0 32px; color:var(--text-faint); font-family:var(--font-mono); font-size:11px; text-align:center; line-height:1.6;"></div>
+
     <div class="grid" id="locker-grid"></div>
   </section>
 
@@ -831,6 +844,17 @@
 
 </main>
 
+
+<div class="modal-backdrop" id="trailer-modal-backdrop">
+  <div class="trailer-modal">
+    <button class="modal-close" id="trailer-modal-close">✕</button>
+    <div class="trailer-frame-wrap">
+      <iframe id="trailer-iframe" src="" title="Season trailer" frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
 
 <div class="modal-backdrop" id="modal-backdrop">
   <div class="modal" id="modal">
@@ -1175,21 +1199,79 @@ function lockerButtonHTML(id){
   return `<button class="locker-btn${inLocker(id) ? ' active' : ''}" data-locker-id="${escapeHtml(id)}" title="Toggle locker">${inLocker(id) ? '✓' : '▤'}</button>`;
 }
 
+/* ---- V-Bucks value estimator ----
+   fortnite-api.com only exposes real prices for items in TODAY's shop —
+   there's no price data for the other ~15,000 cosmetics. So: use the real
+   live price when an item happens to be in today's shop, and fall back to
+   a rarity+type estimate (based on Fortnite's standard, long-stable pricing
+   tiers) for everything else. Always labeled as an estimate, never claimed
+   as exact, since Epic doesn't publish historical prices anywhere. */
+const VBUCKS_RARITY_BASE = {
+  common:800, uncommon:800, rare:1200, epic:1500, legendary:2000, mythic:2000,
+  icon:1500, gaminglegends:1500, marvel:2000, dc:2000, starwars:2000,
+  slurp:1200, lava:1500, frozen:1500, shadow:1500,
+  exotic:null, // Exotic-rarity items are sold for Bars in-game, not V-Bucks
+};
+const VBUCKS_TYPE_MULT = {
+  outfit:1, backpack:0.35, pickaxe:0.5, glider:0.6, contrail:0.35,
+  wrap:0.25, emote:0.35, emoji:0.15, loadingscreen:0.15, music:0.15,
+  spray:0.1, banner:0, toy:0.3, aura:0.5, shoe:0.6, sidekick:0.6,
+  pet:0.4, petcarrier:0.4,
+};
+function estimateVbucksPrice(item){
+  const base = VBUCKS_RARITY_BASE[item.rarity?.value];
+  if(base == null) return null; // unknown/exotic rarity — no honest estimate to give
+  const mult = VBUCKS_TYPE_MULT[item.type?.value] ?? 0.3;
+  if(mult === 0) return 0;
+  return Math.max(100, Math.round((base * mult) / 100) * 100);
+}
+function getVbucksPrice(item){
+  const shopEntry = SHOP_ENTRIES.find(e => shopEntryItem(e)?.id === item.id);
+  if(shopEntry){
+    const price = shopEntry.finalPrice ?? shopEntry.regularPrice;
+    if(price != null) return { price, live:true };
+  }
+  const est = estimateVbucksPrice(item);
+  return est == null ? null : { price:est, live:false };
+}
+
 function renderLocker(){
   const grid = document.getElementById('locker-grid');
   const countEl = document.getElementById('locker-count');
   const ids = [...LOCKER];
   countEl.textContent = ids.length.toLocaleString();
 
+  const valueIcon = document.getElementById('locker-value-icon');
+  if(valueIcon) valueIcon.src = VBUCK_ICON;
+
   if(!ids.length){
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="big">Your locker is empty</div>Tap the ▤ on any cosmetic — in Cosmetics, Item Shop, or Battle Pass — to add it here.</div>`;
+    document.getElementById('locker-value').textContent = '0';
+    document.getElementById('locker-value-note').textContent = '';
     return;
   }
   const items = ids.map(id => ALL_ITEMS.find(i => i.id === id)).filter(Boolean);
   if(!items.length){
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="big">Still loading…</div>Your locker items will show up once the cosmetics feed finishes loading.</div>`;
+    document.getElementById('locker-value').textContent = '—';
+    document.getElementById('locker-value-note').textContent = '';
     return;
   }
+
+  let total = 0, liveCount = 0, estCount = 0, unknownCount = 0;
+  items.forEach(item=>{
+    const result = getVbucksPrice(item);
+    if(!result){ unknownCount++; return; }
+    total += result.price;
+    if(result.live) liveCount++; else estCount++;
+  });
+  document.getElementById('locker-value').textContent = total.toLocaleString();
+  const noteParts = [];
+  if(liveCount) noteParts.push(`${liveCount} priced from today's live shop`);
+  if(estCount) noteParts.push(`${estCount} estimated by rarity/type — Epic doesn't publish historical prices`);
+  if(unknownCount) noteParts.push(`${unknownCount} excluded (unpriced rarity)`);
+  document.getElementById('locker-value-note').textContent = noteParts.length ? noteParts.join(' · ') : '';
+
   grid.innerHTML = items.map(cardHTML).join('');
   attachCardHandlers(grid);
 }
@@ -1329,7 +1411,7 @@ function renderSeasons(){
           <div class="season-name">${escapeHtml(seasonLabel(s))}</div>
           <div class="season-sub">${escapeHtml(s.theme && s.theme !== 'Mini-Season' ? s.theme : 'Chapter ' + s.chapter)}</div>
           <div class="season-btns">
-            <a class="season-btn" href="${trailerUrl}" target="_blank" rel="noopener" title="${trailerTitle}">Trailer</a>
+            <button class="season-btn" onclick="openTrailerModal('${trailerUrl.replace(/'/g, "\\'")}')" title="${trailerTitle}">Trailer</button>
           </div>
           <div class="season-dates">${fmtSeasonDates(s)}</div>
           <div class="season-meta">${metaLine}</div>
@@ -1598,6 +1680,45 @@ document.getElementById('modal-backdrop').addEventListener('click', (e)=>{
   if(e.target.id === 'modal-backdrop') closeModal();
 });
 function closeModal(){ document.getElementById('modal-backdrop').classList.remove('open'); }
+
+/* ============================================================
+   TRAILER MODAL: plays a season's YouTube trailer inline instead
+   of leaving the site.
+   ============================================================ */
+function youtubeVideoId(url){
+  if(!url) return null;
+  try{
+    const u = new URL(url);
+    if(u.hostname.includes('youtu.be')) return u.pathname.slice(1) || null;
+    if(u.hostname.includes('youtube.com')){
+      if(u.pathname === '/watch') return u.searchParams.get('v');
+      if(u.pathname.startsWith('/embed/')) return u.pathname.split('/embed/')[1] || null;
+    }
+  } catch(err){ /* not a valid URL */ }
+  return null;
+}
+function openTrailerModal(url){
+  const id = youtubeVideoId(url);
+  // YouTube's embedded player rejects pages opened via file:// (no real web
+  // address to validate) and throws "Error 153" instead of playing — rather
+  // than show that broken error, skip the in-page player in that case and
+  // just open the real video directly. Once this file is hosted anywhere
+  // (even a simple local server), the inline player works normally.
+  if(!id || location.protocol === 'file:'){
+    window.open(url, '_blank', 'noopener');
+    return;
+  }
+  document.getElementById('trailer-iframe').src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+  document.getElementById('trailer-modal-backdrop').classList.add('open');
+}
+function closeTrailerModal(){
+  document.getElementById('trailer-modal-backdrop').classList.remove('open');
+  document.getElementById('trailer-iframe').src = ''; // stops playback
+}
+document.getElementById('trailer-modal-close').addEventListener('click', closeTrailerModal);
+document.getElementById('trailer-modal-backdrop').addEventListener('click', (e)=>{
+  if(e.target.id === 'trailer-modal-backdrop') closeTrailerModal();
+});
 
 async function loadCosmetics(){
   try{
