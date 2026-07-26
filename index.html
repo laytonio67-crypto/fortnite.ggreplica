@@ -631,6 +631,7 @@
     <div class="filters" id="rarity-filters"></div>
     <div class="filters" id="type-filters">
       <select class="type-select" id="type-select"><option value="">All types</option></select>
+      <select class="type-select" id="season-select"><option value="">All seasons</option></select>
       <select class="type-select" id="sort-select">
         <option value="">Sort: Default</option>
         <option value="newest">Release date: Newest first</option>
@@ -1035,6 +1036,7 @@ let VISIBLE_COUNT = 60;
 const PAGE_SIZE = 60;
 let activeRarities = new Set();
 let activeType = '';
+let activeSeasonKey = '';
 let searchTerm = '';
 let sortOrder = ''; // '', 'newest', 'oldest'
 
@@ -1072,6 +1074,31 @@ function buildTypeFilter(types){
   });
   sel.addEventListener('change', ()=>{ activeType = sel.value; VISIBLE_COUNT = PAGE_SIZE; render(); });
 }
+function seasonFeedKey(s){ return s.apiKey || `${s.chapter}-${s.code}`; }
+function buildSeasonFilter(){
+  const sel = document.getElementById('season-select');
+  if(sel.dataset.built) return; // SEASONS_DATA doesn't change at runtime, only build once
+  // Skip anything malformed (missing chapter/code) rather than let one bad
+  // entry break the whole dropdown — new seasons/mini-seasons/events only
+  // ever need chapter+code to show up here correctly.
+  const usable = SEASONS_DATA.filter(s => s.chapter != null && s.code != null);
+  const chapters = [...new Set(usable.map(s => s.chapter))].sort((a,b)=>a-b);
+  chapters.forEach(ch=>{
+    const group = document.createElement('optgroup');
+    group.label = `Chapter ${ch}`;
+    usable.filter(s => s.chapter === ch)
+      .slice().reverse() // SEASONS_DATA is newest-first; show oldest-to-newest within each chapter
+      .forEach(s=>{
+        const opt = document.createElement('option');
+        opt.value = seasonFeedKey(s);
+        opt.textContent = s.mini ? `${s.name} (Mini-Season)` : (s.theme ? `${s.name} — ${s.theme}` : s.name);
+        group.appendChild(opt);
+      });
+    sel.appendChild(group);
+  });
+  sel.dataset.built = '1';
+  sel.addEventListener('change', ()=>{ activeSeasonKey = sel.value; VISIBLE_COUNT = PAGE_SIZE; render(); });
+}
 function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
 document.getElementById('search-input').addEventListener('input', (e)=>{
@@ -1089,6 +1116,7 @@ document.getElementById('sort-select').addEventListener('change', (e)=>{
 function matchesFilters(item){
   if(activeRarities.size && !activeRarities.has(item.rarity?.value)) return false;
   if(activeType && item.type?.value !== activeType) return false;
+  if(activeSeasonKey && `${item.introduction?.chapter}-${item.introduction?.season}` !== activeSeasonKey) return false;
   if(searchTerm && !item.name.toLowerCase().includes(searchTerm)) return false;
   return true;
 }
@@ -1283,30 +1311,49 @@ function renderLocker(){
    Everything derived from the dates (duration, "days ago",
    countdown, % complete) updates itself automatically.
    ============================================================ */
-// Every BR season, Chapter 1 Season 1 → current, including the mini-seasons.
-// `code` = short banner text · `name` = designation · `theme` = subtitle ·
-// `trailer` = verified direct YouTube URL (null → falls back to Epic's official
-// channel, never a search page) · `bpKey` = key into BATTLE_PASS_SEASONS + the
-// live-feed introduction key, so the Battle Pass button can deep-link into our
-// own Battle Pass tab for that season.
+// Every BR season, Chapter 1 Season 1 → current — this ONE list is the single
+// source of truth for the Seasons tab, the Patch Notes tab, and the Cosmetics
+// tab's season filter. Nothing else needs to change when a season is added.
+//
+// Fields: `chapter` = number · `code` = short id used to build feed/filter
+// keys (numbers like '3', or a short word like 'OG'/'GB'/'Simp'/'Remix' for
+// mini-seasons and special events) · `name` = display name · `theme` =
+// subtitle/nickname · `start`/`end` = 'YYYY-MM-DD' · `trailer` = verified
+// direct YouTube URL, or null to fall back to Epic's official channel.
+//
+// Adding a MINI-SEASON or SPECIAL EVENT (Fortnite OG, a crossover, etc.):
+// same shape as a normal season, plus `mini:true`. That flag is what keeps
+// it from ever being mistaken for a full season elsewhere in the code (it's
+// checked explicitly, not guessed from the theme text) — it still shows up
+// in its chapter's group in every dropdown/list, just labeled as a
+// mini-season/event automatically.
+//
+// The ONE gotcha: Epic's live cosmetics feed numbers seasons by its own
+// internal counter, which mini-seasons/mid-chapter events bump forward —
+// so the season everyone calls "Chapter 6 Season 3" is actually numbered
+// `6-4` in the feed, because Galactic Battle took slot `6-3` first. If a
+// new mini-season shifts the numbering like that, add `apiKey:'chapter-N'`
+// with the REAL feed number — every feature that matches cosmetics to a
+// season (the season filter, Battle Pass tab) reads `apiKey` automatically
+// when present, so this is the only place that ever needs it.
 const TRAILER_FALLBACK = 'https://www.youtube.com/@Fortnite/videos';
 const SEASONS_DATA = [
   { chapter:7, code:'4',   name:'Season 4',      theme:'Gaming Legends',            start:'2026-08-19', end:'2026-10-15', trailer:null },
   { chapter:7, code:'3',   name:'Season 3',      theme:'Runners',            start:'2026-06-06', end:'2026-08-19', trailer:"https://www.youtube.com/watch?v=V5L24DFTFUo" },
   { chapter:7, code:'2',   name:'Season 2',      theme:'Showdown',           start:'2026-03-19', end:'2026-06-05', trailer:"https://www.youtube.com/watch?v=m-c_3degE60" },
   { chapter:7, code:'1',   name:'Season 1',      theme:'Pacific Break',      start:'2025-11-29', end:'2026-03-19', trailer:"https://www.youtube.com/watch?v=Eln66CJHna8" },
-  { chapter:6, code:'Simp',name:'The Simpsons',  theme:'Mini-Season',        start:'2025-11-01', end:'2025-11-29', trailer:"https://www.youtube.com/watch?v=mqQDlH9ztL4", apiKey:'6-6' },
+  { chapter:6, code:'Simp',name:'The Simpsons',  theme:'Mini-Season', mini:true, start:'2025-11-01', end:'2025-11-29', trailer:"https://www.youtube.com/watch?v=mqQDlH9ztL4", apiKey:'6-6' },
   { chapter:6, code:'4',   name:'Season 4',      theme:"Shock 'N Awesome",   start:'2025-08-07', end:'2025-11-01', trailer:"https://www.youtube.com/watch?v=7ZIbokU9tRg", apiKey:'6-5' },
   { chapter:6, code:'3',   name:'Season 3',      theme:'Super',              start:'2025-06-07', end:'2025-08-07', trailer:"https://www.youtube.com/watch?v=X_zzh-g2a4M", apiKey:'6-4' },
-  { chapter:6, code:'GB',  name:'Galactic Battle',theme:'Mini-Season',       start:'2025-05-02', end:'2025-06-07', trailer:"https://www.youtube.com/watch?v=iDzAmxY2i6Q", apiKey:'6-3' },
+  { chapter:6, code:'GB',  name:'Galactic Battle',theme:'Mini-Season', mini:true, start:'2025-05-02', end:'2025-06-07', trailer:"https://www.youtube.com/watch?v=iDzAmxY2i6Q", apiKey:'6-3' },
   { chapter:6, code:'2',   name:'Season 2',      theme:'Lawless',            start:'2025-02-21', end:'2025-05-02', trailer:"https://www.youtube.com/watch?v=66eAN56g7D8" },
   { chapter:6, code:'1',   name:'Season 1',      theme:'Hunters',            start:'2024-12-01', end:'2025-02-21', trailer:"https://www.youtube.com/watch?v=LrfzND9Dgq8" },
-  { chapter:5, code:'Remix',name:'Chapter 2 Remix',theme:'Mini-Season',      start:'2024-11-02', end:'2024-11-30', trailer:"https://www.youtube.com/watch?v=W6W-o_z0cdE" },
+  { chapter:5, code:'Remix',name:'Chapter 2 Remix',theme:'Mini-Season', mini:true, start:'2024-11-02', end:'2024-11-30', trailer:"https://www.youtube.com/watch?v=W6W-o_z0cdE", apiKey:'2-Remix' },
   { chapter:5, code:'4',   name:'Season 4',      theme:'Absolute Doom',      start:'2024-08-16', end:'2024-11-02', trailer:"https://www.youtube.com/watch?v=5uE0XFJSVZA" },
   { chapter:5, code:'3',   name:'Season 3',      theme:'Wrecked',            start:'2024-05-24', end:'2024-08-15', trailer:"https://www.youtube.com/watch?v=0fRBmXtfo_8" },
   { chapter:5, code:'2',   name:'Season 2',      theme:'Myths & Mortals',    start:'2024-03-08', end:'2024-05-24', trailer:"https://www.youtube.com/watch?v=c22tooe3GOk" },
   { chapter:5, code:'1',   name:'Season 1',      theme:'Underground',        start:'2023-12-03', end:'2024-03-08', trailer:"https://www.youtube.com/watch?v=Wjij-OX9RKI" },
-  { chapter:4, code:'OG',  name:'Fortnite OG',   theme:'Mini-Season',        start:'2023-11-03', end:'2023-12-02', trailer:"https://www.youtube.com/watch?v=CZLcCeH2dHU" },
+  { chapter:4, code:'OG',  name:'Fortnite OG',   theme:'Mini-Season', mini:true, start:'2023-11-03', end:'2023-12-02', trailer:"https://www.youtube.com/watch?v=CZLcCeH2dHU" },
   { chapter:4, code:'4',   name:'Season 4',      theme:'Last Resort',        start:'2023-08-25', end:'2023-11-03', trailer:"https://www.youtube.com/watch?v=p_DReaOoEjM" },
   { chapter:4, code:'3',   name:'Season 3',      theme:'Wilds',              start:'2023-06-09', end:'2023-08-25', trailer:"https://www.youtube.com/watch?v=P2JnTforl_4" },
   { chapter:4, code:'2',   name:'Season 2',      theme:'Mega',               start:'2023-03-10', end:'2023-06-08', trailer:"https://www.youtube.com/watch?v=goCoXdp7k2E" },
@@ -1405,11 +1452,11 @@ function renderSeasons(){
           ${isCurrent ? '<span class="b-now">NOW</span>' : ''}
           <span class="b-ch">Chapter ${s.chapter}</span>
           <span class="b-season">${escapeHtml(s.code === 'X' || /^\d+$/.test(s.code) ? (/^\d+$/.test(s.code) ? 'S'+s.code : s.code) : s.code)}</span>
-          ${s.theme && s.theme !== 'Mini-Season' ? `<span class="b-theme">${escapeHtml(s.theme)}</span>` : (s.theme === 'Mini-Season' ? `<span class="b-theme">Mini-Season</span>` : '')}
+          ${s.mini ? `<span class="b-theme">Mini-Season</span>` : (s.theme ? `<span class="b-theme">${escapeHtml(s.theme)}</span>` : '')}
         </div>
         <div class="season-body">
           <div class="season-name">${escapeHtml(seasonLabel(s))}</div>
-          <div class="season-sub">${escapeHtml(s.theme && s.theme !== 'Mini-Season' ? s.theme : 'Chapter ' + s.chapter)}</div>
+          <div class="season-sub">${escapeHtml(s.mini ? 'Mini-Season' : (s.theme || 'Chapter ' + s.chapter))}</div>
           <div class="season-btns">
             <button class="season-btn" onclick="openTrailerModal('${trailerUrl.replace(/'/g, "\\'")}')" title="${trailerTitle}">Trailer</button>
           </div>
@@ -1559,7 +1606,7 @@ function renderPatchNotes(){
       const entry = PATCH_NOTES_LINKS[key];
       if(!entry) return '';
       count++;
-      const subtitle = s.theme && s.theme !== 'Mini-Season' ? s.theme : 'Mini-Update';
+      const subtitle = s.mini ? 'Mini-Update' : s.theme;
       return `
       <div class="patch-row">
         <span class="patch-version">${escapeHtml(entry.version)}</span>
@@ -1732,6 +1779,7 @@ async function loadCosmetics(){
     ALL_ITEMS.forEach(i=>{ if(i.type?.value) typeMap.set(i.type.value, i.type.displayValue); });
     buildRarityFilters(rarities);
     buildTypeFilter([...typeMap.entries()].map(([value,display])=>({value,display})));
+    buildSeasonFilter();
 
     document.getElementById('loading-msg').textContent = `Live from fortnite-api.com`;
     render();
