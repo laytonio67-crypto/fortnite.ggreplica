@@ -1344,7 +1344,7 @@ function renderLocker(){
 // when present, so this is the only place that ever needs it.
 const TRAILER_FALLBACK = 'https://www.youtube.com/@Fortnite/videos';
 const SEASONS_DATA = [
-  { chapter:7, code:'4',   name:'Season 4',      theme:'Override',            start:'2026-08-20', end:'2026-10-15', trailer:"https://www.youtube.com/watch?v=9AsEwQJiQQE" },
+  { chapter:7, code:'4',   name:'Season 4',      theme:'Override',            start:'2026-08-20', end:'2026-11-1', trailer:"https://www.youtube.com/watch?v=9AsEwQJiQQE" },
   { chapter:7, code:'3',   name:'Season 3',      theme:'Runners',            start:'2026-06-06', end:'2026-08-19', trailer:"https://www.youtube.com/watch?v=V5L24DFTFUo" },
   { chapter:7, code:'2',   name:'Season 2',      theme:'Showdown',           start:'2026-03-19', end:'2026-06-05', trailer:"https://www.youtube.com/watch?v=m-c_3degE60" },
   { chapter:7, code:'1',   name:'Season 1',      theme:'Pacific Break',      start:'2025-11-29', end:'2026-03-19', trailer:"https://www.youtube.com/watch?v=Eln66CJHna8" },
@@ -1592,7 +1592,7 @@ const PATCH_NOTES_LINKS = {
   '7-1':{version:'v39.00',wiki:'Chapter_7:_Season_1'},
   '7-2':{version:'v40.00',wiki:'Chapter_7:_Season_2'},
   '7-3':{version:'v41.00',wiki:'Chapter_7:_Season_3'},
-  '7-4':{version:'v42.00',wiki:'Chapter_7:_Season_3'},
+  '7-4':{version:'v42.00',wiki:'Chapter_7:_Season_4'},
 };
 function patchNotesUrl(entry){
   return `https://fortnite.fandom.com/wiki/${entry.wiki}`;
@@ -2379,6 +2379,9 @@ const MAP_HISTORY_RAW = [
   { chapter:7, season:3, label:"v41.00", url:"https://raw.githubusercontent.com/laytonio67-crypto/fortnite-archives/main/chapter_7/season_3/41_00/41_00.jpg" },
   { chapter:7, season:3, label:"v41.10", url:"https://raw.githubusercontent.com/laytonio67-crypto/fortnite-archives/main/chapter_7/season_3/41_10/41_10.jpg" },
   { chapter:7, season:3, label:"v41.20", url:"https://raw.githubusercontent.com/laytonio67-crypto/fortnite-archives/main/chapter_7/season_3/41_20/41_20.jpg" },
+  { chapter:7, season:3, label:"v41.30", url:"https://raw.githubusercontent.com/laytonio67-crypto/fortnite-archives/main/chapter_7/season_3/41_30/41_30.jpg" },
+  { chapter:7, season:4, label:"v42.00", url:"https://raw.githubusercontent.com/laytonio67-crypto/fortnite-archives/main/chapter_7/season_4/42_00/42_00.jpg" },
+  { chapter:7, season:4, label:"v42.10", url:"https://raw.githubusercontent.com/laytonio67-crypto/fortnite-archives/main/chapter_7/season_4/42_10/42_10.jpg" },
 ];
 const MAP_HISTORY = MAP_HISTORY_RAW.map(e => ({
   chapter: `Chapter ${e.chapter}`,
